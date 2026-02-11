@@ -25,24 +25,10 @@
 #define WINDOW_NAME		"ModelSeconds"				// キャプションに表示される名前
 #define SUBCLASS_NAME	"SubWindowClass"			// サブウィンドウクラスの名前
 #define SUBWINDOW_NAME	"プレビュー"				// キャプションに表示される名前
-#define SCREEN_WIDTH		(1280)					// ウィンドウの幅
-#define SCREEN_HEIGHT		(720)					// ウィンドウの高さ
-#define SUBSCREEN_WIDTH		(500)					// サブウィンドウの幅
-#define SUBSCREEN_HEIGHT	(500)					// サブウィンドウの高さ
 #define MODE_ON										// モード切り替え
 #define CREATE_DATE		"2026/02/..."				// 制作日
 #define CREATERS_NAME	"TENMA SAITO\n..."			// 制作者名
 #define	MODEL_TXT		"data\\Scripts\\model.txt"	// デフォルトの外部ファイル
-
-//**********************************************************************************
-//*** Init構造体 ***
-//**********************************************************************************
-typedef struct
-{
-	HINSTANCE hInstance;
-	HWND hWnd;
-	RECT rect;
-} InitStruct;
 
 //**********************************************************************************
 //*** プロトタイプ宣言 ***
@@ -99,7 +85,6 @@ HWND g_hSubWnd = NULL;									// サブウィンドウへのハンドル
 RECT g_WinRectSub;										// サブウィンドウのレクと
 LPTHREAD g_lpThread = NULL;								// スレッドへのポインタ
 ThreadData *g_pData = NULL;								// データへのポインタ
-InitStruct g_IS;										// InitPrev用構造体
 LPDIRECT3DDEVICE9		g_pD3DDevicePrev = NULL;		// プレビュー画面
 
 //================================================================================================================
@@ -148,8 +133,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInstancePrev, LPSTR lpCmdLine
 
 		return -1;
 	}
-
-	g_IS = { hInstance, hSubWnd, rectSub };
 
 	g_WinRectSub = rectSub;
 

@@ -235,7 +235,7 @@ void ResetField(bool bLost)
 
 		VERTEX_3D* pVtx;					// 頂点情報へのポインタ
 
-	/*** 頂点バッファの設定 ***/
+		/*** 頂点バッファの設定 ***/
 		g_pVtxBuffField->Lock(0, 0, (void**)&pVtx, 0);
 
 		for (int nCntField = 0; nCntField < MAX_FIELD; nCntField++)

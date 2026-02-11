@@ -54,10 +54,10 @@ IDR_MENU1 MENU
 BEGIN
     POPUP "ファイル(&F)"
     BEGIN
-        MENUITEM "新規作成(&N)",                    ID_CREATEFILE, GRAYED
+        MENUITEM "新規作成(&N)",                    ID_CREATEFILE
         POPUP "保存(&S)"
         BEGIN
-            MENUITEM "名前を付けて保存(&N)",                ID_NAMEDSAVE, GRAYED
+            MENUITEM "名前を付けて保存(&N)",                ID_NAMEDSAVE
             MENUITEM "上書き保存(&U)",                   ID_UPDATE
         END
         MENUITEM "開く(&O)",                      ID_OPEN
