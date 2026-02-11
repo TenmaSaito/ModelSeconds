@@ -11,6 +11,7 @@
 #include "modeldata.h"
 #include "camera.h"
 #include "mathUtil.h"
+#include "save.h"
 
 using namespace MyMathUtil;
 
@@ -54,7 +55,7 @@ void Uninit3DModel(void)
 //=================================================================================================
 void Update3DModel(void)
 {
-	
+
 }
 
 //=================================================================================================
@@ -148,4 +149,12 @@ LP3DMODEL Get3DModel(int nIdxModel)
 	// もしインデックス外なら
 	if (nIdxModel < 0 || nIdxModel >= MAX_3DMODEL) return NULL;
 	return &g_aModel[nIdxModel];
+}
+
+//=================================================================================================
+// --- 使用モデル数取得 ---
+//=================================================================================================
+int GetNum3DModel(void)
+{
+	return g_nNum3DModel;
 }
