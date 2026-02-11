@@ -40,7 +40,7 @@ void SaveModelFile(const char* pSaveFileName)
 	D3DXVECTOR3 rot = VECNULL;										// 向き変換用
 
 	_3DMODEL* p3DModel = Get3DModel(0);								// 設置モデルの先頭アドレス
-	int nNumModel = GetNum3DModel();								// 設置モデルの数
+	int *nNumModel = GetNum3DModel();								// 設置モデルの数
 
 	Field* pField = GetField(0);									// 設置床の先頭アドレス
 	int nNumFIeld = GetNumField();									// 設置床の数
@@ -154,7 +154,7 @@ void SaveModelFile(const char* pSaveFileName)
 	fprintf(pFile, "\n");		// 改行
 
 	// 配置モデル数分だけ
-	for (int nCntModel = 0; nCntModel < nNumModel; nCntModel++, p3DModel++)
+	for (int nCntModel = 0; nCntModel < *nNumModel; nCntModel++, p3DModel++)
 	{
 		rot = RadianToDegree(p3DModel->rot);
 
@@ -179,10 +179,12 @@ void SaveModelFile(const char* pSaveFileName)
 //=============================================================================
 //	配置モデル消去処理
 //=============================================================================
-void DeleteModel(_3DMODEL* p3DModel, int nNumModel, int nIdx)
+void DeleteModel(_3DMODEL* p3DModel, int* nNumModel, int nIdx)
 {
-	for (int nCnt3DModel = nIdx; nCnt3DModel < nNumModel; nCnt3DModel++)
+	for (int nCnt3DModel = nIdx; nCnt3DModel < *nNumModel; nCnt3DModel++)
 	{// 消去したいモデルまで一個ずつ詰めていく
 		p3DModel[nCnt3DModel] = p3DModel[nCnt3DModel + 1];
 	}
+
+	(*nNumModel)--;
 }

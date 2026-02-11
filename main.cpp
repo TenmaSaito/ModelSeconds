@@ -296,8 +296,6 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	HANDLE hFile = NULL;						// ファイルハンドルhFileをNULLに初期化.
 	DWORD err;
 
-	(void)strcpy(&g_szFileTitle[0], "data\\Scripts\\model.txt");
-
 	switch (uMsg)
 	{
 	case WM_DESTROY:		// ウィンドウ破棄のメッセージ
@@ -679,6 +677,7 @@ HRESULT Init(HINSTANCE hInstance, HWND hWnd, BOOL bWindow)
 
 #ifdef MODE_ON
 
+	(void)strcpy(&g_szFileTitle[0], "data\\Scripts\\model.txt");
 	SetModelFileName(MODEL_TXT);
 	SetMode(MODE_EDIT);
 
