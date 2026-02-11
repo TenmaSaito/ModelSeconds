@@ -154,7 +154,6 @@
     <ClCompile Include="2Dpolygon.cpp" />
     <ClCompile Include="3Dmodel.cpp" />
     <ClCompile Include="camera.cpp" />
-    <ClCompile Include="controller.cpp" />
     <ClCompile Include="debugproc.cpp" />
     <ClCompile Include="edit.cpp" />
     <ClCompile Include="field.cpp" />
@@ -164,6 +163,7 @@
     <ClCompile Include="mathUtil.cpp" />
     <ClCompile Include="mode.cpp" />
     <ClCompile Include="model.cpp" />
+    <ClCompile Include="save.cpp" />
     <ClCompile Include="skybox.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="thread.cpp" />
@@ -173,7 +173,6 @@
     <ClInclude Include="2Dpolygon.h" />
     <ClInclude Include="3Dmodel.h" />
     <ClInclude Include="camera.h" />
-    <ClInclude Include="controller.h" />
     <ClInclude Include="debugproc.h" />
     <ClInclude Include="edit.h" />
     <ClInclude Include="field.h" />
@@ -184,6 +183,7 @@
     <ClInclude Include="mode.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="save.h" />
     <ClInclude Include="skybox.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="thread.h" />
