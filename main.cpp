@@ -269,7 +269,7 @@ void MessageLoop(LPMSG lpMsg)
 				nID = MessageBox(GetHandleWindow(), "保存してもよろしいですか？", "終了確認メッセージ", (MB_YESNO | MB_ICONINFORMATION));
 				if (nID == IDYES)
 				{
-					SaveEditFile();
+					SaveModelFile(g_szFileTitle);
 				}
 
 				SetNewSaveTime();
@@ -295,6 +295,8 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	TCHAR szBuffer[MAX_PATH] = TEXT("");
 	HANDLE hFile = NULL;						// ファイルハンドルhFileをNULLに初期化.
 	DWORD err;
+
+	(void)strcpy(&g_szFileTitle[0], "data\\Scripts\\model.txt");
 
 	switch (uMsg)
 	{
@@ -371,7 +373,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			nID = MessageBox(hWnd, "保存してもよろしいですか？", "終了確認メッセージ", (MB_YESNO | MB_ICONINFORMATION));
 			if (nID == IDYES)
 			{
-				SaveEditFile();
+				SaveModelFile(g_szFileTitle);
 			}
 
 			break;
