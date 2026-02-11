@@ -394,7 +394,7 @@ void UpdateController(void)
 	if (GetKeyboardTrigger(DIK_DELETE))
 	{
 		DeleteModel(Get3DModel(0), GetNum3DModel(), g_nSelectNum);
-		if (&g_nSelectNum > GetNum3DModel())
+		if (g_nSelectNum > *GetNum3DModel())
 		{
 			g_nSelectNum = *GetNum3DModel();
 			g_pSelectModel = Get3DModel(g_nSelectNum);
