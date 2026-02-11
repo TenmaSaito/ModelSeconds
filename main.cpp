@@ -1139,7 +1139,7 @@ void UninitPrev(void)
 //===============================================================================================================
 void UpdatePrev(void)
 {
-	PrintDebugProc(1, "FPS : %d", g_pData->nFrame);
+	PrintDebugProc(1, "FPS : %d\n", g_pData->nFrame);
 
 	UpdateMode(1);
 }

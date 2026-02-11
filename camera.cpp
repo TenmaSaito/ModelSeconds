@@ -9,6 +9,7 @@
 //**********************************************************************************
 #include "camera.h"
 #include "mathUtil.h"
+#include "debugproc.h"
 
 //*************************************************************************************************
 //*** マクロ定義 ***
@@ -194,6 +195,18 @@ void UpdateCamera(int nIdxCamera)
 			pCamera->rot.z = D3DX_PI * 0.9f;
 		}
 	}
+
+	/*** ホイールでの注視点間距離変更処理！ ***/
+	if (GetMouseMove(MOUSESLOPE_WHEEL) != 0 && pCamera->fZlength >= CAMERA_ZLENGTH * 0.01f)
+	{
+		pCamera->fZlength -= (float)GetMouseMove(MOUSESLOPE_WHEEL) * 0.1f;
+		if (pCamera->fZlength <= CAMERA_ZLENGTH * 0.01f)
+		{
+			pCamera->fZlength = CAMERA_ZLENGTH * 0.01f;
+		}
+	}
+
+	PrintDebugProc(nIdxCamera, "ZLen : %f\n", pCamera->fZlength);
 
 	pCamera->posV.x = pCamera->posR.x + (sinf(pCamera->rot.z) * cosf(pCamera->rot.y) * pCamera->fZlength);
 	pCamera->posV.y = pCamera->posR.y + (cosf(pCamera->rot.z) * pCamera->fZlength);

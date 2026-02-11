@@ -88,6 +88,9 @@ void InitEdit(int nThreadNum)
 	}
 	else
 	{
+		/*** ライトの初期化 ***/
+		InitLight(1);
+
 		D3DVIEWPORT9 viewport;
 		viewport.Width = SUBSCREEN_WIDTH;
 		viewport.Height = SUBSCREEN_HEIGHT;
@@ -96,8 +99,10 @@ void InitEdit(int nThreadNum)
 		viewport.X = 0.0f;
 		viewport.Y = 0.0f;
 
-		AddCamera(VEC_Z(-100.0f), VECNULL, VEC_Z(D3DX_HALFPI), viewport);
+		AddCamera(D3DXVECTOR3(0, 100, -100.0f), VECNULL, VEC_Z(D3DX_HALFPI * 0.75f), viewport);
+		Camera *pCam = GetCamera(1);
 
+		pCam->fZlength = 500.0f;
 		InitPrevModel();
 
 		LoadModel(g_pFileName, 1);
@@ -152,12 +157,6 @@ void UpdateEdit(int nThreadNum)
 {
 	if (nThreadNum == 0)
 	{
-		/*** Aの更新 ***/
-		if (GetKeyboardTrigger(DIK_RETURN))
-		{
-			SetMode(MODE_EDIT);
-		}
-
 		/*** カメラの更新 ***/
 		UpdateCamera(g_nIdxCamera);
 
@@ -183,9 +182,6 @@ void UpdateEdit(int nThreadNum)
 	}
 	else
 	{
-		/*** カメラの更新 ***/
-		UpdateCamera(1);
-
 		UpdatePrevModel();
 	}
 }
