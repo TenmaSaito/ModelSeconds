@@ -48,7 +48,7 @@ void InitModelData(int nThreadNum)
 		ZeroMemory(&g_aModelDataPrev[0], sizeof(MODELDATA) * (MAX_MODELDATA));
 
 		// リセット用データを初期化
-		ZeroMemory(&g_aResetFileNameXmodelPrev[0], sizeof(g_aResetFileNameXmodel));
+		ZeroMemory(&g_aResetFileNameXmodelPrev[1], sizeof(g_aResetFileNameXmodel));
 
 		// 読み込んだモデルデータの数を初期化
 		g_nNumLoadModelDataPrev = 0;

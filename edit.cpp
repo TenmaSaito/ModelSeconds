@@ -21,6 +21,7 @@
 #include "mode.h"
 #include "save.h"
 #include "controller.h"
+#include "prevModel.h"
 
 //**********************************************************************************
 //*** マクロ定義 ***
@@ -39,168 +40,231 @@ int g_nIdxCamera;		// 設置したカメラのインデックス
 //==================================================================================
 // --- 初期化 ---
 //==================================================================================
-void InitEdit(void)
+void InitEdit(int nThreadNum)
 {
-	/*** Aの初期化 ***/
+	if (nThreadNum == 0)
+	{
+		/*** Aの初期化 ***/
 
-	/*** カメラの初期化 ***/
-	InitCamera();
+		/*** カメラの初期化 ***/
+		InitCamera();
 
-	/*** テクスチャの初期化 ***/
-	InitTexture();
+		/*** テクスチャの初期化 ***/
+		InitTexture();
 
-	/*** モデルデータの初期化 ***/
-	InitModelData();
+		/*** モデルデータの初期化 ***/
+		InitModelData();
 
-	/*** 3Dモデルの初期化 ***/
-	Init3DModel();
+		/*** 3Dモデルの初期化 ***/
+		Init3DModel();
 
-	/*** ライトの初期化 ***/
-	InitLight();
+		/*** ライトの初期化 ***/
+		InitLight();
 
-	/*** 床の初期化 ***/
-	InitField();
+		/*** 床の初期化 ***/
+		InitField();
 
-	/*** スカイボックスの初期化 ***/
-	InitSkybox();
+		/*** スカイボックスの初期化 ***/
+		InitSkybox();
 
-	/*** モデル配置 ***/
-	InitModel();
-	LoadModel(g_pFileName);
+		/*** モデル配置 ***/
+		InitModel();
+		LoadModel(g_pFileName);
 
-	/*** コントローラー初期化 ***/
-	InitController();
+		/*** コントローラー初期化 ***/
+		InitController();
 
-	D3DVIEWPORT9 viewport;
-	viewport.Width = SCREEN_WIDTH;
-	viewport.Height = SCREEN_HEIGHT;
-	viewport.MinZ = 0.0f;
-	viewport.MaxZ = 1.0f;
-	viewport.X = 0.0f;
-	viewport.Y = 0.0f;
+		D3DVIEWPORT9 viewport;
+		viewport.Width = SCREEN_WIDTH;
+		viewport.Height = SCREEN_HEIGHT;
+		viewport.MinZ = 0.0f;
+		viewport.MaxZ = 1.0f;
+		viewport.X = 0.0f;
+		viewport.Y = 0.0f;
 
-	g_nIdxCamera = AddCamera(VEC_Z(-100.0f), VECNULL, VEC_Z(D3DX_HALFPI), viewport);
+		g_nIdxCamera = AddCamera(VEC_Z(-100.0f), VECNULL, VEC_Z(D3DX_HALFPI), viewport);
 
-	SetSkybox(SKYBOX_NORMAL);
+		SetSkybox(SKYBOX_NORMAL);
+	}
+	else
+	{
+		D3DVIEWPORT9 viewport;
+		viewport.Width = SUBSCREEN_WIDTH;
+		viewport.Height = SUBSCREEN_HEIGHT;
+		viewport.MinZ = 0.0f;
+		viewport.MaxZ = 1.0f;
+		viewport.X = 0.0f;
+		viewport.Y = 0.0f;
+
+		AddCamera(VEC_Z(-100.0f), VECNULL, VEC_Z(D3DX_HALFPI), viewport);
+
+		InitPrevModel();
+
+		LoadModel(g_pFileName, 1);
+	}
 }
 
 //==================================================================================
 // --- 終了 ---
 //==================================================================================
-void UninitEdit(void)
+void UninitEdit(int nThreadNum)
 {
-	/*** Aの終了 ***/
+	if (nThreadNum == 0)
+	{
+		/*** Aの終了 ***/
 
-	/*** カメラの終了 ***/
-	UninitCamera();
+		/*** カメラの終了 ***/
+		UninitCamera();
 
-	/*** テクスチャの終了 ***/
-	UninitTexture();
+		/*** テクスチャの終了 ***/
+		UninitTexture();
 
-	/*** モデルデータの終了 ***/
-	UninitModelData();
+		/*** モデルデータの終了 ***/
+		UninitModelData();
 
-	/*** 3Dモデルの終了 ***/
-	Uninit3DModel();
+		/*** 3Dモデルの終了 ***/
+		Uninit3DModel();
 
-	/*** ライトの終了 ***/
-	UninitLight();
+		/*** ライトの終了 ***/
+		UninitLight();
 
-	/*** 床の終了 ***/
-	UninitField();
+		/*** 床の終了 ***/
+		UninitField();
 
-	/*** スカイボックスの終了 ***/
-	UninitSkybox();
+		/*** スカイボックスの終了 ***/
+		UninitSkybox();
 
-	/*** コントローラー終了 ***/
+		/*** コントローラー終了 ***/
+	}
+	else
+	{
+		/*** モデルデータの終了 ***/
+		UninitModelData(1);
+
+		UninitPrevModel();
+	}
 }
 
 //==================================================================================
 // --- 更新 ---
 //==================================================================================
-void UpdateEdit(void)
+void UpdateEdit(int nThreadNum)
 {
-	/*** Aの更新 ***/
-	if (GetKeyboardTrigger(DIK_RETURN))
+	if (nThreadNum == 0)
 	{
-		SetMode(MODE_EDIT);
+		/*** Aの更新 ***/
+		if (GetKeyboardTrigger(DIK_RETURN))
+		{
+			SetMode(MODE_EDIT);
+		}
+
+		/*** カメラの更新 ***/
+		UpdateCamera(g_nIdxCamera);
+
+		/*** 3Dモデルの更新 ***/
+		Update3DModel();
+
+		/*** ライトの更新 ***/
+		UpdateLight();
+
+		/*** 床の更新 ***/
+		UpdateField();
+
+		/*** スカイボックスの更新 ***/
+		UpdateSkybox();
+
+		/*** コントローラーの更新 ***/
+		UpdateController();
+
+		if (GetKeyboardTrigger(DIK_BACK) == true)
+		{
+			SaveModelFile("data\\Scripts\\test.txt");
+		}
 	}
-
-	/*** カメラの更新 ***/
-	UpdateCamera(g_nIdxCamera);
-
-	/*** 3Dモデルの更新 ***/
-	Update3DModel();
-
-	/*** ライトの更新 ***/
-	UpdateLight();
-
-	/*** 床の更新 ***/
-	UpdateField();
-
-	/*** スカイボックスの更新 ***/
-	UpdateSkybox();
-
-	/*** コントローラーの更新 ***/
-	UpdateController();
-
-	if (GetKeyboardTrigger(DIK_BACK) == true)
+	else
 	{
-		SaveModelFile("data\\Scripts\\test.txt");
+		/*** カメラの更新 ***/
+		UpdateCamera(1);
+
+		UpdatePrevModel();
 	}
 }
 
 //==================================================================================
 // --- 描画 ---
 //==================================================================================
-void DrawEdit(void)
+void DrawEdit(int nThreadNum)
 {
-	// カメラの数分だけ描画
-	for (int nCntDraw = 0; nCntDraw < GetCameraNum(); nCntDraw++)
+	if (nThreadNum == 0)
+	{
+		// カメラの数分だけ描画
+		for (int nCntDraw = 0; nCntDraw < 1; nCntDraw++)
+		{
+			/*** カメラの設置 ***/
+			SetCamera(nCntDraw);
+
+			/*** スカイボックスの描画 ***/
+			DrawSkybox();
+
+			// VERTEX_3D ============================================
+			/*** Aの描画 ***/
+
+			/*** 床の描画 ***/
+			DrawField();
+
+			/*** 3Dモデルの描画 ***/
+			Draw3DModel();
+
+			/*** コントローラーの描画 ***/
+			DrawController();
+
+			// VERTEX_2D ============================================
+			/*** Aの描画 ***/
+		}
+	}
+	else
 	{
 		/*** カメラの設置 ***/
-		SetCamera(nCntDraw);
+		SetCamera(1);
 
-		/*** スカイボックスの描画 ***/
-		DrawSkybox();
-
-		// VERTEX_3D ============================================
-		/*** Aの描画 ***/
-
-		/*** 床の描画 ***/
-		DrawField();
-
-		/*** 3Dモデルの描画 ***/
-		Draw3DModel();
-
-		/*** コントローラーの描画 ***/
-		DrawController();
-
-		// VERTEX_2D ============================================
-		/*** Aの描画 ***/
+		DrawPrevModel();
 	}
 }
 
 //==================================================================================
 // --- デバイスリセット ---
 //==================================================================================
-void ResetEdit(bool bLost)
+void ResetEdit(bool bLost, int nThreadNum)
 {
-	if (bLost)
-	{ // Uninit
-		ResetTexture(bLost);
-		ResetModelData(bLost);
-		ResetSkybox(bLost);
-		ResetField(bLost);
-		ResetLight(bLost);
+	if (nThreadNum == 0)
+	{
+		if (bLost)
+		{ // Uninit
+			ResetTexture(bLost);
+			ResetModelData(bLost);
+			ResetSkybox(bLost);
+			ResetField(bLost);
+			ResetLight(bLost);
+		}
+		else
+		{ // ReCreateBuffer
+			ResetTexture(bLost);
+			ResetModelData(bLost);
+			ResetSkybox(bLost);
+			ResetField(bLost);
+			ResetLight(bLost);
+		}
 	}
 	else
-	{ // ReCreateBuffer
-		ResetTexture(bLost);
-		ResetModelData(bLost);
-		ResetSkybox(bLost);
-		ResetField(bLost);
-		ResetLight(bLost);
+	{
+		if (bLost)
+		{ // Uninit
+			ResetModelData(bLost, nThreadNum);
+		}
+		else
+		{
+			ResetModelData(bLost, nThreadNum);
+		}
 	}
 }
 

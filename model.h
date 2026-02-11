@@ -41,7 +41,7 @@ void UpdateModel(void);	// 更新処理
 void DrawModel(void);	// 描画処理
 void SetModel(D3DXVECTOR3 pos, D3DXVECTOR3 rot, int nType, int nUseShadow);		// モデルの設定処理
 Model* GetModel(void);			// モデル情報の譲渡(種類毎)
-bool LoadModel(const char *pFileName);			// モデルの読み込み処理
+bool LoadModel(const char *pFileName, int nThreadNum = 0);			// モデルの読み込み処理
 bool JudgeComent(char* pStr);	// スクリプト読み込みでのコメントアウトの処理
 int GetNumModel(void);
 char* GetModelFileName(void);

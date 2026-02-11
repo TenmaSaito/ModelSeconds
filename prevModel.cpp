@@ -50,7 +50,14 @@ void UninitPrevModel(void)
 //==================================================================================
 void UpdatePrevModel(void)
 {
+	g_mdPrev.LockMultiData();
 
+	LPPREVMODEL pPrevModel = &g_modelPrev;	// 3Dモデルへのポインタ
+
+	pPrevModel->rot.y += 0.001f;
+	pPrevModel->rot = RepairedRot(pPrevModel->rot);
+
+	g_mdPrev.UnlockMultiData();
 }
 
 //==================================================================================
@@ -70,27 +77,21 @@ void DrawPrevModel(void)
 	pDevice->SetRenderState(D3DRS_ALPHAREF, 60);				// 基準値
 
 	// 3Dモデルの描画
-	if (pPrevModel->bUse != false)
-	{ // もし使われていれば
 			/*** ワールドマトリックスを計算 ***/
-		CalcWorldMatrix(&pPrevModel->mtxWorld,
-			pPrevModel->pos,
-			pPrevModel->rot);
+	CalcWorldMatrix(&pPrevModel->mtxWorld,
+		pPrevModel->pos,
+		pPrevModel->rot);
 
-		// モデルデータを取得
-		LPMODELDATA pModelData = GetModelData(pPrevModel->nIdx3Dmodel, 1);
-		Draw3DModelFromModelData(pDevice,
-			pModelData,
-			&pPrevModel->mtxWorld);
-	}
+	// モデルデータを取得
+	LPMODELDATA pModelData = GetModelData(pPrevModel->nIdx3Dmodel, 1);
+	Draw3DModelFromModelData(pDevice,
+		pModelData,
+		&pPrevModel->mtxWorld);
 
 	/*** アルファテストを無効にする ***/
 	pDevice->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);		// アルファテストを無効化
 	pDevice->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_ALWAYS);	// 無条件にZバッファに書き込み
 	pDevice->SetRenderState(D3DRS_ALPHAREF, 0);					// 基準値
-
-	// デバイスの取得終了
-	EndDevice();
 
 	g_mdPrev.UnlockMultiData();
 }

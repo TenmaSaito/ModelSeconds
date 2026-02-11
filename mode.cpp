@@ -64,7 +64,13 @@ void UpdateMode(int nThreadNum)
 	}
 	else
 	{
-
+		switch (g_mode)
+		{
+			// エディタ画面
+		case MODE_EDIT:
+			UpdateEdit(nThreadNum);
+			break;
+		}
 	}
 }
 
@@ -98,7 +104,24 @@ void DrawMode(int nThreadNum)
 	}
 	else
 	{
+		// デバイスの取得
+		LPDIRECT3DDEVICE9 pDevice = GetDevicePrev();
+		D3DVIEWPORT9 viewportDef;		// デフォルトビューポート
 
+		// ビューポートの保存
+		pDevice->GetViewport(&viewportDef);
+
+		/*** 現在の画面(モード)の描画処理 ***/
+		switch (g_mode)
+		{
+			// エディタ画面
+		case MODE_EDIT:
+			DrawEdit(nThreadNum);
+			break;
+		}
+
+		// ビューポートの設定
+		pDevice->SetViewport(&viewportDef);
 	}
 }
 
@@ -114,7 +137,7 @@ void SetMode(MODE mode, int nThreadNum)
 		{
 			// エディタ画面
 		case MODE_EDIT:
-			UninitEdit();
+			UninitEdit(0);
 			break;
 		}
 
@@ -123,7 +146,7 @@ void SetMode(MODE mode, int nThreadNum)
 		{
 			// エディタ画面
 		case MODE_EDIT:
-			InitEdit();
+			InitEdit(0);
 			break;
 		}
 
@@ -132,7 +155,26 @@ void SetMode(MODE mode, int nThreadNum)
 	}
 	else
 	{
+		// 現在の画面(モード)の終了
+		switch (g_mode)
+		{
+			// エディタ画面
+		case MODE_EDIT:
+			UninitEdit(1);
+			break;
+		}
 
+		// 指定の画面(モード)の初期化処理
+		switch (mode)
+		{
+			// エディタ画面
+		case MODE_EDIT:
+			InitEdit(1);
+			break;
+		}
+
+		// モードを保存
+		g_mode = mode;
 	}
 }
 

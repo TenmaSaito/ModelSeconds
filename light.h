@@ -18,9 +18,9 @@
 //**********************************************************************************
 //*** プロトタイプ宣言 ***
 //**********************************************************************************
-void InitLight(void);
+void InitLight(int nThread = 0);
 void UninitLight(void);
 void UpdateLight(void);
 
-void ResetLight(bool bLost);
+void ResetLight(bool bLost, int nThread = 0);
 #endif

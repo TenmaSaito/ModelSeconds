@@ -19,12 +19,12 @@
 //**********************************************************************************
 //*** プロトタイプ宣言 ***
 //**********************************************************************************
-void InitEdit(void);
-void UninitEdit(void);
-void UpdateEdit(void);
-void DrawEdit(void);
+void InitEdit(int nThreadNum = 0);
+void UninitEdit(int nThreadNum = 0);
+void UpdateEdit(int nThreadNum = 0);
+void DrawEdit(int nThreadNum = 0);
 
-void ResetEdit(bool bLost);
+void ResetEdit(bool bLost, int nThreadNum = 0);
 void SaveEditFile(void);
 void SetModelFileName(const char *pFileName);
 #endif
