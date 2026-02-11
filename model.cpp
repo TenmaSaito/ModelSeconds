@@ -85,8 +85,329 @@ Model* GetModel(void)
 // =================================================
 // モデルの読み込む処理
 // =================================================
-bool LoadModel(const char *pFileName)
+bool LoadModel(const char *pFileName, int nThreadNum)
 {	
+	if (nThreadNum == 0)
+	{
+		// === 全項目共通で使用可能な変数 === //
+		MyMathUtil::INT_VECTOR3 pos;
+		MyMathUtil::INT_VECTOR3 rot;
+
+		// === スカイ用の変数を用意 === //
+		int nIdxTexSky = 0;					// 空用のテクスチャのインデックス
+		float fMoveSky = 0.0f;				// 空の移動量
+		int nXdevideSky, nYdevideSky = 0;	// 空の分割数
+		int nRadiusSky = 0;					// 空のサイズ
+
+		// === 雲用の変数を用意 === // 
+		int nIdxTexCloud = 0;	// 雲のテクスチャのインデックス
+		int nRadiusCloud = 0;	// 雲の半径
+		int nHeightCloud = 0;	// 雲のテクスチャの高さ
+		int nXdevideCloud, nYdevideCloud = 0;	// 雲のテクスチャの分割数
+
+		// === フィールドの情報を格納する変数 === //
+		D3DXVECTOR3 posField;
+		int nIdxTexField = 0;	// テクスチャのタイプ
+		int aIdxTexture[100] = {};	// テクスチャのタイプ
+		int nXdevideField, nYdevideField = 0;	// フィールドの分割数
+		int nXsize, nYsize = 0;		// フィールドのサイズ
+		int nCntField = 0;
+
+		// === モデル用の変数を用意 === //
+		int nNumIdx = 0;			// モデルファイル名のインデックス
+		int nNumModel = 0;			// モデル数
+		char Realize[128];			// 判別用の変数
+		char* pEqual = NULL;		// =を消去するためのポインタ
+		int nCntModel = 0;			// 読み込むモデルファイル名をカウントする
+		int nCntTexture = 0;		// 読み込むテクスチャのファイル名をカウントする
+		int nUseShadow = 0;			// 影を使用するかどうか用の変数
+
+		int nNumVtx[MAX_MODEL];		// 頂点数
+		DWORD dwSizeFVF[MAX_MODEL];	// 頂点フォーマットのサイズ
+		BYTE* pVtxBuff;					// 頂点バッファへのポインタ
+		LPDIRECT3DDEVICE9 pDevice;		// デバイスへのポインタ
+		D3DXMATERIAL* pMat;				// マテリアルへのポインタ
+
+		// デバイスの取得
+		pDevice = GetDevice();
+
+		// ステージ情報を読み込み
+		FILE* pFile;
+		pFile = NULL;
+
+		pFile = fopen(pFileName, "r");
+
+		if (pFile != NULL)
+		{// ファイルを開いた
+			while (1)
+			{
+				fgets(&Realize[0], sizeof Realize, pFile);	// 最初に比較用文字の読み込み
+
+				if (JudgeComent(&Realize[0]) == true)
+				{// 何かの情報を読み込む合図を取得したとき
+					if (strcmp(&Realize[0], "SCRIPT") == 0)
+					{
+
+					}
+					if (strstr(&Realize[0], "NUM_TEXTURE") != NULL)
+					{// テクスチャの数を代入
+						// 「=」の場所を見つける
+						pEqual = strstr(Realize, "=");
+
+						if (pEqual != NULL)
+						{
+							// アドレスを1こずらす
+							pEqual++;
+
+							// テクスチャの数を読み込む
+							(void)sscanf(pEqual, "%d", &g_nNumTexture);
+						}
+
+					}
+					if (strstr(&Realize[0], "TEXTURE_FILENAME") != NULL)
+					{// テクスチャのファイル名を代入
+						while (1)
+						{
+							if (nCntTexture < g_nNumTexture)
+							{// 上で代入したテクスチャ数よりも、読み込んだファイル数が少ないとき
+								// 「=」の場所を見つける
+								pEqual = strstr(Realize, "=");
+
+								if (pEqual != NULL)
+								{
+									// アドレスを1こずらす
+									pEqual++;
+
+									// テクスチャの数を読み込む
+									(void)sscanf(pEqual, "%s", &g_TextureName[nCntTexture][0]);
+
+									LoadTexture(&g_TextureName[nCntTexture][0], &aIdxTexture[nCntTexture]);
+
+									// テクスチャのファイル名をカウント
+									nCntTexture++;
+									break;
+								}
+
+							}
+						}
+					}
+				}
+
+				if (strstr(&Realize[0], "FIELDSET") != NULL)
+				{// フィールドの情報を代入
+					while (1)
+					{
+						fgets(&Realize[0], sizeof Realize, pFile);	// 最初に比較用文字の読み込み
+
+						if (strstr(&Realize[0], "TEXTYPE") != NULL)
+						{
+							// 「=」の場所を見つける
+							pEqual = strstr(Realize, "=");
+
+							if (pEqual != NULL)
+							{
+								// アドレスを1こずらす
+								pEqual++;
+
+								// テクスチャのインデックスを読み込む
+								(void)sscanf(pEqual, "%d", &nIdxTexField);
+							}
+						}
+						if (strstr(&Realize[0], "POS") != NULL)
+						{
+							pEqual = strstr(Realize, "=");
+
+							if (pEqual != NULL)
+							{
+								// アドレスを1こずらす
+								pEqual++;
+
+								// 地面の位置を読み込む
+								(void)sscanf(pEqual, "%f %f %f", &posField.x, &posField.y, &posField.z);
+							}
+						}
+						if (strstr(&Realize[0], "ROT") != NULL)
+						{
+							pEqual = strstr(Realize, "=");
+
+							if (pEqual != NULL)
+							{
+								// アドレスを1こずらす
+								pEqual++;
+
+								// 地面の向きを読み込む
+								(void)sscanf(pEqual, "%d %d %d", &rot.x, &rot.y, &rot.z);
+							}
+						}
+						if (strstr(&Realize[0], "BLOCK") != NULL)
+						{
+							pEqual = strstr(Realize, "=");
+
+							if (pEqual != NULL)
+							{
+								// アドレスを1こずらす
+								pEqual++;
+
+								// 分割数を読み込む
+								(void)sscanf(pEqual, "%d %d", &nXdevideField, &nYdevideField);
+							}
+						}
+						if (strstr(&Realize[0], "SIZE") != NULL)
+						{
+							pEqual = strstr(Realize, "=");
+
+							if (pEqual != NULL)
+							{
+								// アドレスを1こずらす
+								pEqual++;
+
+								// 縦横のサイズを読み込む
+								(void)sscanf(pEqual, "%d %d", &nXsize, &nYsize);
+							}
+						}
+						if (strstr(&Realize[0], "END_FIELDSET") != NULL)
+						{
+							D3DXVECTOR3 rotVec = DegreeToRadian(INTToFloat(rot));
+							SetField(posField, VECNULL, rotVec, (float)nXsize, (float)nYsize, aIdxTexture[nIdxTexField], (float)nXdevideField, (float)nYdevideField, D3DCULL_CCW);
+							nCntField++;
+							break;
+						}
+					}
+
+				}
+
+				if (strstr(&Realize[0], "NUM_MODEL") != NULL)
+				{// モデルの数を代入
+					// 「=」の場所を見つける
+					pEqual = strstr(Realize, "=");
+
+					if (pEqual != NULL)
+					{
+						// アドレスを1こずらす
+						pEqual++;
+
+						// モデルの数を読み込む
+						(void)sscanf(pEqual, "%d", &g_nNumModel);
+					}
+
+				}
+
+				if (strstr(&Realize[0], "MODEL_FILENAME") != NULL)
+				{// モデルのファイル名を代入
+					// 「=」の場所を見つける
+					pEqual = strstr(Realize, "=");
+
+					if (pEqual != NULL)
+					{
+						HRESULT hr;		// エラー文用
+
+						// アドレスを1こずらす
+						pEqual++;
+
+						// モデルの数を読み込む
+						sscanf(pEqual, "%s", &g_ModelName[nCntModel][0]);
+
+						// モデルを読み込む
+						LoadModelData(&g_ModelName[nCntModel][0], &g_Model[nCntModel].nIdxModelData);
+						g_Model[nCntModel].bUse = true;
+
+						nCntModel++;
+					}
+				}
+				if (STR_SUCCESS(strstr(&Realize[0], "MODELSET")))
+				{
+					D3DXVECTOR3 posF;
+
+					while (1)
+					{
+						fgets(&Realize[0], sizeof Realize, pFile);	// 最初に比較用文字の読み込み
+
+						if (JudgeComent(&Realize[0]) == true)
+						{
+							if (strstr(&Realize[0], "TYPE") != NULL)
+							{
+								pEqual = strstr(Realize, "=");
+
+								if (pEqual != NULL)
+								{
+									// アドレスを1こずらす
+									pEqual++;
+
+									// モデルの数を読み込む
+									(void)sscanf(pEqual, "%d", &nNumIdx);
+								}
+							}
+							if (strstr(&Realize[0], "POS") != NULL)
+							{
+								pEqual = strstr(Realize, "=");
+
+								if (pEqual != NULL)
+								{
+									// アドレスを1こずらす
+									pEqual++;
+
+									// モデルの数を読み込む
+									(void)sscanf(pEqual, "%f %f %f", &posF.x, &posF.y, &posF.z);
+								}
+							}
+							if (strstr(&Realize[0], "ROT") != NULL)
+							{
+								pEqual = strstr(Realize, "=");
+
+								if (pEqual != NULL)
+								{
+									// アドレスを1こずらす
+									pEqual++;
+
+									// モデルの数を読み込む
+									(void)sscanf(pEqual, "%d %d %d", &rot.x, &rot.y, &rot.z);
+								}
+							}
+							if (strstr(&Realize[0], "SHADOW") != NULL)
+							{
+								pEqual = strstr(Realize, "=");
+
+								if (pEqual != NULL)
+								{
+									// アドレスを1こずらす
+									pEqual++;
+
+									// モデルの数を読み込む
+									(void)sscanf(pEqual, "%d", &nUseShadow);
+								}
+							}
+							if (strstr(&Realize[0], "END_MODELSET") != NULL)
+							{
+								// Set3DModel
+								D3DXVECTOR3 rotF = INTToFloat(rot);
+								rotF = DegreeToRadian(rotF);
+								Set3DModel(posF, rotF, g_Model[nNumIdx].nIdxModelData);
+								break;
+							}
+						}
+					}
+				}
+				else if (strcmp(&Realize[0], "END_SCRIPT") == 0)
+				{// スクリプト読み込みを終了する
+					break;
+				}
+			}
+			fclose(pFile);	// ファイルを閉じる
+		}
+		else
+		{// ファイルオープン失敗時
+			// デバイスの破棄
+			EndDevice();
+			return false;
+		}
+
+		// デバイスの破棄
+		EndDevice();
+
+		return true;
+	}
+	else
+	{
 	// === 全項目共通で使用可能な変数 === //
 	MyMathUtil::INT_VECTOR3 pos;
 	MyMathUtil::INT_VECTOR3 rot;
@@ -127,7 +448,7 @@ bool LoadModel(const char *pFileName)
 	D3DXMATERIAL* pMat;				// マテリアルへのポインタ
 
 	// デバイスの取得
-	pDevice = GetDevice();
+	pDevice = GetDevicePrev();
 
 	// ステージ情報を読み込み
 	FILE* pFile;
@@ -147,8 +468,9 @@ bool LoadModel(const char *pFileName)
 				{
 
 				}
-				if (strstr(&Realize[0], "NUM_TEXTURE") != NULL)
-				{// テクスチャの数を代入
+
+				if (strstr(&Realize[0], "NUM_MODEL") != NULL)
+				{// モデルの数を代入
 					// 「=」の場所を見つける
 					pEqual = strstr(Realize, "=");
 
@@ -157,240 +479,44 @@ bool LoadModel(const char *pFileName)
 						// アドレスを1こずらす
 						pEqual++;
 
-						// テクスチャの数を読み込む
-						(void)sscanf(pEqual, "%d", &g_nNumTexture);
+						// モデルの数を読み込む
+						(void)sscanf(pEqual, "%d", &g_nNumModel);
 					}
 
 				}
-				if (strstr(&Realize[0], "TEXTURE_FILENAME") != NULL)
-				{// テクスチャのファイル名を代入
-					while (1)
+
+				if (strstr(&Realize[0], "MODEL_FILENAME") != NULL)
+				{// モデルのファイル名を代入
+					// 「=」の場所を見つける
+					pEqual = strstr(Realize, "=");
+
+					if (pEqual != NULL)
 					{
-						if (nCntTexture < g_nNumTexture)
-						{// 上で代入したテクスチャ数よりも、読み込んだファイル数が少ないとき
-							// 「=」の場所を見つける
-							pEqual = strstr(Realize, "=");
+						HRESULT hr;		// エラー文用
 
-							if (pEqual != NULL)
-							{
-								// アドレスを1こずらす
-								pEqual++;
+						// アドレスを1こずらす
+						pEqual++;
 
-								// テクスチャの数を読み込む
-								(void)sscanf(pEqual, "%s", &g_TextureName[nCntTexture][0]);
+						// モデルの数を読み込む
+						sscanf(pEqual, "%s", &g_ModelName[nCntModel][0]);
 
-								LoadTexture(&g_TextureName[nCntTexture][0], &aIdxTexture[nCntTexture]);
+						int n;
 
-								// テクスチャのファイル名をカウント
-								nCntTexture++;
-								break;
-							}
+						// モデルを読み込む
+						LoadModelData(&g_ModelName[nCntModel][0], &n, 1);
+						g_Model[nCntModel].bUse = true;
 
-						}
-					}
-				}
-			}
-
-			if (strstr(&Realize[0], "FIELDSET") != NULL)
-			{// フィールドの情報を代入
-				while (1)
-				{
-					fgets(&Realize[0], sizeof Realize, pFile);	// 最初に比較用文字の読み込み
-
-					if (strstr(&Realize[0], "TEXTYPE") != NULL)
-					{
-						// 「=」の場所を見つける
-						pEqual = strstr(Realize, "=");
-
-						if (pEqual != NULL)
-						{
-							// アドレスを1こずらす
-							pEqual++;
-
-							// テクスチャのインデックスを読み込む
-							(void)sscanf(pEqual, "%d", &nIdxTexField);
-						}
-					}
-					if (strstr(&Realize[0], "POS") != NULL)
-					{
-						pEqual = strstr(Realize, "=");
-
-						if (pEqual != NULL)
-						{
-							// アドレスを1こずらす
-							pEqual++;
-
-							// 地面の位置を読み込む
-							(void)sscanf(pEqual, "%f %f %f", &posField.x, &posField.y, &posField.z);
-						}
-					}
-					if (strstr(&Realize[0], "ROT") != NULL)
-					{
-						pEqual = strstr(Realize, "=");
-
-						if (pEqual != NULL)
-						{
-							// アドレスを1こずらす
-							pEqual++;
-
-							// 地面の向きを読み込む
-							(void)sscanf(pEqual, "%d %d %d", &rot.x, &rot.y, &rot.z);
-						}
-					}
-					if (strstr(&Realize[0], "BLOCK") != NULL)
-					{
-						pEqual = strstr(Realize, "=");
-
-						if (pEqual != NULL)
-						{
-							// アドレスを1こずらす
-							pEqual++;
-
-							// 分割数を読み込む
-							(void)sscanf(pEqual, "%d %d", &nXdevideField, &nYdevideField);
-						}
-					}
-					if (strstr(&Realize[0], "SIZE") != NULL)
-					{
-						pEqual = strstr(Realize, "=");
-
-						if (pEqual != NULL)
-						{
-							// アドレスを1こずらす
-							pEqual++;
-
-							// 縦横のサイズを読み込む
-							(void)sscanf(pEqual, "%d %d", &nXsize, &nYsize);
-						}
-					}
-					if (strstr(&Realize[0], "END_FIELDSET") != NULL)
-					{
-						D3DXVECTOR3 rotVec = DegreeToRadian(INTToFloat(rot));
-						SetField(posField, VECNULL, rotVec, (float)nXsize, (float)nYsize, aIdxTexture[nIdxTexField], (float)nXdevideField, (float)nYdevideField, D3DCULL_CCW);
-						nCntField++;
-						break;
+						nCntModel++;
 					}
 				}
 
-			}
-
-			if (strstr(&Realize[0], "NUM_MODEL") != NULL)
-			{// モデルの数を代入
-				// 「=」の場所を見つける
-				pEqual = strstr(Realize, "=");
-
-				if (pEqual != NULL)
-				{
-					// アドレスを1こずらす
-					pEqual++;
-
-					// モデルの数を読み込む
-					(void)sscanf(pEqual, "%d", &g_nNumModel);
+				if (strcmp(&Realize[0], "END_SCRIPT") == 0)
+				{// スクリプト読み込みを終了する
+					break;
 				}
-
-			}
-
-			if (strstr(&Realize[0], "MODEL_FILENAME") != NULL)
-			{// モデルのファイル名を代入
-				// 「=」の場所を見つける
-				pEqual = strstr(Realize, "=");
-
-				if (pEqual != NULL)
-				{
-					HRESULT hr;		// エラー文用
-
-					// アドレスを1こずらす
-					pEqual++;
-
-					// モデルの数を読み込む
-					sscanf(pEqual, "%s", &g_ModelName[nCntModel][0]);
-
-					// モデルを読み込む
-					LoadModelData(&g_ModelName[nCntModel][0], &g_Model[nCntModel].nIdxModelData);
-					LoadModelData(&g_ModelName[nCntModel][0], &g_Model[nCntModel].nIdxModelData, 1);
-					g_Model[nCntModel].bUse = true;
-
-					nCntModel++;
-				}
-			}
-			if (STR_SUCCESS(strstr(&Realize[0], "MODELSET")))
-			{
-				D3DXVECTOR3 posF;
-
-				while (1)
-				{
-					fgets(&Realize[0], sizeof Realize, pFile);	// 最初に比較用文字の読み込み
-
-					if (JudgeComent(&Realize[0]) == true)
-					{
-						if (strstr(&Realize[0], "TYPE") != NULL)
-						{
-							pEqual = strstr(Realize, "=");
-
-							if (pEqual != NULL)
-							{
-								// アドレスを1こずらす
-								pEqual++;
-
-								// モデルの数を読み込む
-								(void)sscanf(pEqual, "%d", &nNumIdx);
-							}
-						}
-						if (strstr(&Realize[0], "POS") != NULL)
-						{
-							pEqual = strstr(Realize, "=");
-
-							if (pEqual != NULL)
-							{
-								// アドレスを1こずらす
-								pEqual++;
-
-								// モデルの数を読み込む
-								(void)sscanf(pEqual, "%f %f %f", &posF.x, &posF.y, &posF.z);
-							}
-						}
-						if (strstr(&Realize[0], "ROT") != NULL)
-						{
-							pEqual = strstr(Realize, "=");
-
-							if (pEqual != NULL)
-							{
-								// アドレスを1こずらす
-								pEqual++;
-
-								// モデルの数を読み込む
-								(void)sscanf(pEqual, "%d %d %d", &rot.x, &rot.y, &rot.z);
-							}
-						}
-						if (strstr(&Realize[0], "SHADOW") != NULL)
-						{
-							pEqual = strstr(Realize, "=");
-
-							if (pEqual != NULL)
-							{
-								// アドレスを1こずらす
-								pEqual++;
-
-								// モデルの数を読み込む
-								(void)sscanf(pEqual, "%d", &nUseShadow);
-							}
-						}
-						if (strstr(&Realize[0], "END_MODELSET") != NULL)
-						{
-							// Set3DModel
-							D3DXVECTOR3 rotF = INTToFloat(rot);
-							rotF = DegreeToRadian(rotF);
-							Set3DModel(posF, rotF, g_Model[nNumIdx].nIdxModelData);
-							break;
-						}
-					}
-				}
-			}
-			else if (strcmp(&Realize[0], "END_SCRIPT") == 0)
-			{// スクリプト読み込みを終了する
-				break;
 			}
 		}
+
 		fclose(pFile);	// ファイルを閉じる
 	}
 	else
@@ -404,6 +530,7 @@ bool LoadModel(const char *pFileName)
 	EndDevice();
 
 	return true;
+	}
 }
 
 // =================================================

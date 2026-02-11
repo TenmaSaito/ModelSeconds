@@ -1115,6 +1115,10 @@ HRESULT InitPrev(HINSTANCE hInstance, HWND hWnd, BOOL bWindow)
 	g_pD3DDevicePrev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
 
 	InitDebugProc(1);
+
+	InitMode(1);
+
+	SetMode(MODE_EDIT, 1);
 }
 
 //===============================================================================================================
@@ -1122,6 +1126,8 @@ HRESULT InitPrev(HINSTANCE hInstance, HWND hWnd, BOOL bWindow)
 //===============================================================================================================
 void UninitPrev(void)
 {
+	UninitMode(1);
+
 	UninitDebugProc(1);
 
 	// Direct3Dデバイスの破棄
@@ -1134,6 +1140,8 @@ void UninitPrev(void)
 void UpdatePrev(void)
 {
 	PrintDebugProc(1, "FPS : %d", g_pData->nFrame);
+
+	UpdateMode(1);
 }
 
 //===============================================================================================================
@@ -1154,6 +1162,7 @@ void DrawPrev(void)
 		// 描画開始
 		if (SUCCEEDED(pDevice->BeginScene()))
 		{// 描画開始が成功した場合
+			DrawMode(1);
 
 			DrawDebugProc(1);
 
