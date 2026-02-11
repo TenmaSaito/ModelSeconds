@@ -42,4 +42,6 @@ void Draw3DModel(void);
 int Set3DModel(D3DXVECTOR3 pos, D3DXVECTOR3 rot, int nIdxModelData);
 LP3DMODEL Get3DModel(int nIdxModel);
 int GetNum3DModel(void);
+void Set3DModelLast(D3DXVECTOR3 pos, D3DXVECTOR3 rot);
+P3DMODEL GetLast3DModel(void);
 #endif

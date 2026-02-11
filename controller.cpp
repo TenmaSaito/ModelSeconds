@@ -52,6 +52,8 @@ void InitController(void)
 	g_fSpdPOSR = SETPOS_SPD;
 	bTarget = false;
 	g_bPosRot = true;
+
+	Set3DModelLast(SetPos, SetRot);
 }
 //=================================================================================================
 // --- コントローラー終了 ---
@@ -254,61 +256,114 @@ void UpdateController(void)
 				g_pSelectModel->rot.y -= MOVE_ROT;
 			}
 		}
-		else if (g_ControlType == CONTROLTYPE_SET)
-		{// -- モデルセット -- //
-			if (g_bPosRot == true)
-			{
-				if (GetKeyboardPress(DIK_RIGHT))
-				{//右
-					if (GetKeyboardPress(DIK_LSHIFT))
-					{//LSHIFTで上
-						SetPos.y += MOVE_POS;
-					}
-					else
-					{
-						SetPos.x += MOVE_POS;
-					}
+	}
+	else if (g_ControlType == CONTROLTYPE_SET)
+	{// -- モデルセット -- //
+		P3DMODEL pLast = GetLast3DModel();
+		if (GetKeyboardPress(DIK_RSHIFT))
+		{
+			g_bPosRot ^= true;
+			pLast->bAlpha ^= true;
+		}
+
+		if (g_bPosRot == true)
+		{
+			if (GetKeyboardPress(DIK_RIGHT))
+			{//右
+				if (GetKeyboardPress(DIK_LSHIFT))
+				{//LSHIFTで上
+					SetPos.y += MOVE_POS;
 				}
-				if (GetKeyboardPress(DIK_LEFT))
-				{//左
-					if (GetKeyboardPress(DIK_LSHIFT))
-					{//LSHIFTで下
-						SetPos.y -= MOVE_POS;
-					}
-					else
-					{
-						SetPos.x -= MOVE_POS;
-					}
-				}
-				if (GetKeyboardPress(DIK_UP))
-				{//奥
-					if (GetKeyboardPress(DIK_LSHIFT))
-					{//LSHIFTで上
-						SetPos.y += MOVE_POS;
-					}
-					else
-					{
-						SetPos.z += MOVE_POS;
-					}
-				}
-				if (GetKeyboardPress(DIK_DOWN))
-				{//手前
-					if (GetKeyboardPress(DIK_LSHIFT))
-					{//LSHIFTで下
-						SetPos.y -= MOVE_POS;
-					}
-					else
-					{
-						SetPos.z -= MOVE_POS;
-					}
+				else
+				{
+					SetPos.x += MOVE_POS;
 				}
 			}
-			else if (g_bPosRot == false)
-			{
-
+			if (GetKeyboardPress(DIK_LEFT))
+			{//左
+				if (GetKeyboardPress(DIK_LSHIFT))
+				{//LSHIFTで下
+					SetPos.y -= MOVE_POS;
+				}
+				else
+				{
+					SetPos.x -= MOVE_POS;
+				}
+			}
+			if (GetKeyboardPress(DIK_UP))
+			{//奥
+				if (GetKeyboardPress(DIK_LSHIFT))
+				{//LSHIFTで上
+					SetPos.y += MOVE_POS;
+				}
+				else
+				{
+					SetPos.z += MOVE_POS;
+				}
+			}
+			if (GetKeyboardPress(DIK_DOWN))
+			{//手前
+				if (GetKeyboardPress(DIK_LSHIFT))
+				{//LSHIFTで下
+					SetPos.y -= MOVE_POS;
+				}
+				else
+				{
+					SetPos.z -= MOVE_POS;
+				}
 			}
 		}
+		else if (g_bPosRot == false)
+		{
+			if (GetKeyboardPress(DIK_RIGHT))
+			{//右
+				if (GetKeyboardPress(DIK_LSHIFT))
+				{//LSHIFTで上
+					SetRot.x += MOVE_ROT;
+				}
+				else
+				{
+					SetRot.y += MOVE_ROT;
+				}
+			}
+			if (GetKeyboardPress(DIK_LEFT))
+			{//左
+				if (GetKeyboardPress(DIK_LSHIFT))
+				{//LSHIFTで下
+					SetRot.x -= MOVE_ROT;
+				}
+				else
+				{
+					SetRot.y -= MOVE_ROT;
+				}
+			}
+			if (GetKeyboardPress(DIK_UP))
+			{//奥
+				if (GetKeyboardPress(DIK_LSHIFT))
+				{//LSHIFTで上
+					SetRot.z += MOVE_ROT;
+				}
+				else
+				{
+					SetRot.x += MOVE_ROT;
+				}
+			}
+			if (GetKeyboardPress(DIK_DOWN))
+			{//手前
+				if (GetKeyboardPress(DIK_LSHIFT))
+				{//LSHIFTで下
+					SetRot.z -= MOVE_ROT;
+				}
+				else
+				{
+					SetRot.y -= MOVE_ROT;
+				}
+			}
+		}
+		pLast->pos = SetPos;
+		pLast->rot = SetRot;
 	}
+	
 
 	//=================================
 	//	     -- 常設コマンド --

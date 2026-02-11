@@ -93,6 +93,24 @@ void Draw3DModel(void)
 					&p3DModel->mtxWorld,
 					diffuse);
 			}
+			else if (nCnt3DModel == MAX_3DMODEL - 1)
+			{
+				D3DCOLORVALUE diffuse;
+
+				if (g_aModel[nCnt3DModel].bAlpha == true)
+				{
+					diffuse = { 0.0f, 0.0f, 1.0f, 0.5f };
+				}
+				else
+				{
+					diffuse = { 1.0f, 0.0f, 0.0f, 0.5f };
+				}
+
+				Draw3DModelByCustomColorFromModelData(pDevice,
+					pModelData,
+					&p3DModel->mtxWorld,
+					diffuse);
+			}
 			else
 			{
 				Draw3DModelFromModelData(pDevice,
@@ -139,6 +157,24 @@ int Set3DModel(D3DXVECTOR3 pos, D3DXVECTOR3 rot, int nIdxModelData)
 	if (nCnt3DModel >= MAX_3DMODEL) nCnt3DModel = -1;
 
 	return nCnt3DModel;
+}
+//=================================================================================================
+// --- 配列最終モデル設置 ---
+//=================================================================================================
+void Set3DModelLast(D3DXVECTOR3 pos, D3DXVECTOR3 rot)
+{
+	g_aModel[MAX_3DMODEL-1].pos = pos;
+	g_aModel[MAX_3DMODEL-1].rot = rot;
+	g_aModel[MAX_3DMODEL-1].nIdx3Dmodel = 0;
+	g_aModel[MAX_3DMODEL - 1].bAlpha = true;
+	g_aModel[MAX_3DMODEL-1].bUse = true;
+}
+//=================================================================================================
+// --- 配列最終モデルポインタ取得 ---
+//=================================================================================================
+P3DMODEL GetLast3DModel(void)
+{
+	return &g_aModel[MAX_3DMODEL - 1];
 }
 
 //=================================================================================================
