@@ -96,6 +96,7 @@ typedef struct
 //*** プロトタイプ宣言 ***
 //**********************************************************************************
 LPDIRECT3DDEVICE9 GetDevice(void);
+LPDIRECT3DDEVICE9 GetDevicePrev(void);
 void EndDevice(void);
 HWND GetHandleWindow(void);
 bool GetIsMainThread(void);

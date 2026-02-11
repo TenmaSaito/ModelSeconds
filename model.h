@@ -43,6 +43,10 @@ void SetModel(D3DXVECTOR3 pos, D3DXVECTOR3 rot, int nType, int nUseShadow);		// 
 Model* GetModel(void);			// モデル情報の譲渡(種類毎)
 bool LoadModel(const char *pFileName);			// モデルの読み込み処理
 bool JudgeComent(char* pStr);	// スクリプト読み込みでのコメントアウトの処理
+int GetNumModel(void);
+char* GetModelFileName(void);
+int GetNumTexture(void);
+char* GetTextureFileName(void);
 bool CollisionModel(D3DXVECTOR3* pPos, D3DXVECTOR3* pPosOld, D3DXVECTOR3* pMove);	// モデルとの当たり判定
 
 #endif

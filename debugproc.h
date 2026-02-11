@@ -19,11 +19,12 @@
 //**********************************************************************************
 //*** プロトタイプ宣言 ***
 //**********************************************************************************
-void InitDebugProc(void);
-void UninitDebugProc(void);
-void UpdateDebugProc(void);
-void DrawDebugProc(void);
+void InitDebugProc(int nThreadNum = 0);
+void UninitDebugProc(int nThreadNum = 0);
+void UpdateDebugProc(int nThreadNum = 0);
+void DrawDebugProc(int nThreadNum = 0);
 
-void ResetDebugProc(bool bLost);
+void ResetDebugProc(bool bLost, int nThreadNum = 0);
 void PrintDebugProc(const char *fmt, ...);
+void PrintDebugProc(int nThreadNum, const char* fmt, ...);
 #endif

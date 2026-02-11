@@ -146,7 +146,7 @@ void UpdateEdit(void)
 
 	if (GetKeyboardTrigger(DIK_BACK) == true)
 	{
-		SaveModelFile();
+		SaveModelFile("data\\Scripts\\test.txt");
 	}
 }
 
