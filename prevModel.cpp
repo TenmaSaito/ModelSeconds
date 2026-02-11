@@ -35,6 +35,18 @@ MultiData g_mdPrev;			// クリティカルセクション
 void InitPrevModel(void)
 {
 	g_modelPrev = {};
+
+	g_mdPrev.LockMultiData();
+
+	LPPREVMODEL pPrevModel = &g_modelPrev;
+	int nCntPrevModel;
+
+	pPrevModel->pos = VECNULL;
+	pPrevModel->rot = VECNULL;
+	pPrevModel->nIdx3Dmodel = 5;
+	pPrevModel->bUse = true;
+
+	g_mdPrev.UnlockMultiData();
 }
 
 //==================================================================================
@@ -77,7 +89,7 @@ void DrawPrevModel(void)
 	pDevice->SetRenderState(D3DRS_ALPHAREF, 60);				// 基準値
 
 	// 3Dモデルの描画
-			/*** ワールドマトリックスを計算 ***/
+	/*** ワールドマトリックスを計算 ***/
 	CalcWorldMatrix(&pPrevModel->mtxWorld,
 		pPrevModel->pos,
 		pPrevModel->rot);
