@@ -15,13 +15,12 @@ using namespace MyMathUtil;
 //*****************************************************************************
 // マクロ定義
 //*****************************************************************************
-#define MAX_MODELTYPE	(64)			// モデルの最大数(仮)
+#define MAX_MODELTYPE	(64)			// モデルの種類の最大数
 #define SAVE_COOLTIME	(5000)			// 保存クールタイム
 
 //*****************************************************************************
 // グローバル変数
 //*****************************************************************************
-char g_aFileName[MAX_MODELTYPE][FILENAME_MAX] = {};					// パスの名前
 
 //=============================================================================
 //	外部ファイル書き出し処理
@@ -46,8 +45,6 @@ void SaveModelFile(const char* pSaveFileName)
 	char* pModelFileName = GetModelFileName();						// モデルファイル名のポインタ
 	char* pTextureFileName = GetTextureFileName();					// テクスチャファイル名のポインタ
 
-	strcpy(&g_aFileName[0][0], "test.txt");							// モデルファイル名仮置き
-
 	FILE* pFile = fopen(pSaveFileName, "w");						// ファイルを開く
 
 	if (pFile == NULL)
@@ -55,10 +52,11 @@ void SaveModelFile(const char* pSaveFileName)
 		MessageBox(NULL, TEXT("テキストデータの保存に失敗"), TEXT("Error"), MB_ICONHAND);
 		return;
 	}
+
 	// ヘッダー
 	fprintf(pFile, "#==============================================\n");
 	fprintf(pFile, "#\n");
-	fprintf(pFile, "# ModelSeconds [%s]\n", pSaveFileName);
+	fprintf(pFile, "# ModelSeconds [%s]\n", strrchr(pSaveFileName, '\\') + 1);
 	fprintf(pFile, "# Author : \n");
 	fprintf(pFile, "#\n");
 	fprintf(pFile, "#==============================================\n\n");
@@ -72,7 +70,7 @@ void SaveModelFile(const char* pSaveFileName)
 
 	fprintf(pFile, "NUM_TEXTURE = %d\n", nNumTexture);
 
-	fprintf(pFile, "\n");
+	fprintf(pFile, "\n");		// 改行
 
 	// テクスチャファイル名書き出し
 	fprintf(pFile, "#------------------------------------------------------------------------------\n");
@@ -85,7 +83,7 @@ void SaveModelFile(const char* pSaveFileName)
 		fprintf(pFile, "TEXTURE_FILENAME = %s\n", &pTextureFileName[nCntTexture * 128]);	// 文字数分ズラす
 	}
 
-	fprintf(pFile, "\n");
+	fprintf(pFile, "\n");		// 改行
 
 	// モデル数書き出し
 	fprintf(pFile, "#------------------------------------------------------------------------------\n");
@@ -94,7 +92,7 @@ void SaveModelFile(const char* pSaveFileName)
 
 	fprintf(pFile, "NUM_MODEL = %d\n", nNumModelType);
 
-	fprintf(pFile, "\n");
+	fprintf(pFile, "\n");		// 改行
 
 	// モデルファイル名書き出し
 	fprintf(pFile, "#------------------------------------------------------------------------------\n");
@@ -107,14 +105,14 @@ void SaveModelFile(const char* pSaveFileName)
 		fprintf(pFile, "MODEL_FILENAME = %s\n", &pModelFileName[nCntModel * 128]);	// 文字数分ズラす
 	}
 
-	fprintf(pFile, "\n");
+	fprintf(pFile, "\n");		// 改行
 
 	// モデルの配置情報書き出し
 	fprintf(pFile, "#------------------------------------------------------------------------------\n");
 	fprintf(pFile, "# モデル配置情報\n");
 	fprintf(pFile, "#------------------------------------------------------------------------------\n");
 
-	fprintf(pFile, "\n");
+	fprintf(pFile, "\n");		// 改行
 
 	// 配置モデル数分だけ
 	for (int nCntModel = 0; nCntModel < nNumModel; nCntModel++, p3DModel++)
@@ -127,14 +125,14 @@ void SaveModelFile(const char* pSaveFileName)
 		fprintf(pFile, "\n");
 	}
 
-	fprintf(pFile, "\n");
+	fprintf(pFile, "\n");											// 改行
 	fprintf(pFile, "END_SCRIPT\t\t# この行は消さないでね！");		// 終わりの合図
 
-	fclose(pFile);		// ファイルを閉じる
+	fclose(pFile);					// ファイルを閉じる
 
 	dwSaveTime = dwCurrentTime;		// 時間を記録
 	
-	GenerateMessageBox(MB_ICONASTERISK, "Save", "モデル情報の保存が完了しました！");
+	GenerateMessageBox(MB_ICONASTERISK, "Save", "モデル情報の保存が完了しました！");	// 完了通知
 }
 
 //=============================================================================
@@ -143,7 +141,7 @@ void SaveModelFile(const char* pSaveFileName)
 void DeleteModel(_3DMODEL* p3DModel, int nNumModel, int nIdx)
 {
 	for (int nCnt3DModel = nIdx; nCnt3DModel < nNumModel; nCnt3DModel++)
-	{
+	{// 消去したいモデルまで一個ずつ詰めていく
 		p3DModel[nCnt3DModel] = p3DModel[nCnt3DModel + 1];
 	}
 }
