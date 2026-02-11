@@ -26,7 +26,7 @@ MODE g_mode = MODE_EDIT;								// 現在の画面
 //==================================================================================
 // --- タイトル関連cppファイルの初期化 ---
 //==================================================================================
-void InitMode(void)
+void InitMode(int nThreadNum)
 {
 	
 }
@@ -34,92 +34,127 @@ void InitMode(void)
 //==================================================================================
 // --- タイトル関連cppファイルの終了 ---
 //==================================================================================
-void UninitMode(void)
+void UninitMode(int nThreadNum)
 {
-	// ゲーム画面の終了処理
-	UninitEdit();
+	if (nThreadNum == 0)
+	{
+		// ゲーム画面の終了処理
+		UninitEdit();
+	}
+	else
+	{
+
+	}
 }
 
 //==================================================================================
 // --- タイトル関連cppファイルの更新 ---
 //==================================================================================
-void UpdateMode(void)
+void UpdateMode(int nThreadNum)
 {
-	switch (g_mode)
+	if (nThreadNum == 0)
 	{
-		// エディタ画面
-	case MODE_EDIT:
-		UpdateEdit();
-		break;
+		switch (g_mode)
+		{
+			// エディタ画面
+		case MODE_EDIT:
+			UpdateEdit();
+			break;
+		}
+	}
+	else
+	{
+
 	}
 }
 
 //==================================================================================
 // --- タイトル関連cppファイルの描画 ---
 //==================================================================================
-void DrawMode(void)
+void DrawMode(int nThreadNum)
 {
-	// デバイスの取得
-	LPDIRECT3DDEVICE9 pDevice = GetDevice();
-	D3DVIEWPORT9 viewportDef;		// デフォルトビューポート
-
-	// ビューポートの保存
-	pDevice->GetViewport(&viewportDef);
-
-	/*** 現在の画面(モード)の描画処理 ***/
-	switch (g_mode)
+	if (nThreadNum == 0)
 	{
-		// エディタ画面
-	case MODE_EDIT:
-		DrawEdit();
-		break;
+		// デバイスの取得
+		LPDIRECT3DDEVICE9 pDevice = GetDevice();
+		D3DVIEWPORT9 viewportDef;		// デフォルトビューポート
+
+		// ビューポートの保存
+		pDevice->GetViewport(&viewportDef);
+
+		/*** 現在の画面(モード)の描画処理 ***/
+		switch (g_mode)
+		{
+			// エディタ画面
+		case MODE_EDIT:
+			DrawEdit();
+			break;
+		}
+
+		// ビューポートの設定
+		pDevice->SetViewport(&viewportDef);
+
+		EndDevice();
 	}
+	else
+	{
 
-	// ビューポートの設定
-	pDevice->SetViewport(&viewportDef);
-
-	EndDevice();
+	}
 }
 
 //==================================================================================
 // --- 画面の設定 ---
 //==================================================================================
-void SetMode(MODE mode)
+void SetMode(MODE mode, int nThreadNum)
 {
-	// 現在の画面(モード)の終了
-	switch (g_mode)
+	if (nThreadNum == 0)
 	{
-		// エディタ画面
-	case MODE_EDIT:
-		UninitEdit();
-		break;
-	}
+		// 現在の画面(モード)の終了
+		switch (g_mode)
+		{
+			// エディタ画面
+		case MODE_EDIT:
+			UninitEdit();
+			break;
+		}
 
-	// 指定の画面(モード)の初期化処理
-	switch (mode)
+		// 指定の画面(モード)の初期化処理
+		switch (mode)
+		{
+			// エディタ画面
+		case MODE_EDIT:
+			InitEdit();
+			break;
+		}
+
+		// モードを保存
+		g_mode = mode;
+	}
+	else
 	{
-		// エディタ画面
-	case MODE_EDIT:
-		InitEdit();
-		break;
-	}
 
-	// モードを保存
-	g_mode = mode;
+	}
 }
 
 //==================================================================================
 // --- デバイスリセット ---
 //==================================================================================
-void ResetMode(bool bLost)
+void ResetMode(bool bLost, int nThreadNum)
 {
-	// 指定の画面(モード)の初期化処理
-	switch (g_mode)
+	if (nThreadNum == 0)
 	{
-		// エディタ画面
-	case MODE_EDIT:
-		ResetEdit(bLost);
-		break;
+		// 指定の画面(モード)の初期化処理
+		switch (g_mode)
+		{
+			// エディタ画面
+		case MODE_EDIT:
+			ResetEdit(bLost);
+			break;
+		}
+	}
+	else
+	{
+
 	}
 }
 

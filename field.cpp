@@ -25,31 +25,11 @@ using MyMathUtil::CollisionBoxZ;
 #define COLLISION_CODE		"FLOOR"		// 床の判定用文字列
 
 //*************************************************************************************************
-//*** 床構造体の定義 ***
-//*************************************************************************************************
-typedef struct
-{
-	D3DXVECTOR3 pos;							// ポリゴンの位置
-	D3DXVECTOR3 move;							// 移動量
-	D3DXVECTOR3 rot;							// ポリゴンの角度
-	D3DXMATRIX mtxWorld;						// ワールドマトリックス
-	float fWidth;								// ポリゴンの横幅
-	float fDepth;								// ポリゴンの奥行
-	int nXBlock;								// 拡大倍率X
-	int nZBlock;								// 拡大倍率Y
-	int nIndexTexture;							// テクスチャの種類
-	int nCounterAnim;							// アニメーションカウンター
-	int nPatternAnim;							// アニメーションパターン
-	char aCodename[MAX_PATH];					// 判定用名称
-	D3DCULL type;								// カリングタイプ
-	bool bUse;									// 使われているか
-}Field;
-
-//*************************************************************************************************
 //*** グローバル変数 ***
 //*************************************************************************************************
 LPDIRECT3DVERTEXBUFFER9 g_pVtxBuffField = NULL;	// 頂点バッファのポインタ
 Field g_aField[MAX_FIELD];
+int g_nNumField;								// 床の使用数
 
 //================================================================================================================
 // --- 床の初期化処理 ---
@@ -59,6 +39,8 @@ void InitField(void)
 	/*** デバイスの取得 ***/
 	LPDIRECT3DDEVICE9 pDevice = GetDevice();
 	VERTEX_3D *pVtx;					// 頂点情報へのポインタ
+
+	g_nNumField = 0;
 
 	/*** 各変数の初期化 ***/
 	for (int nCntField = 0; nCntField < MAX_FIELD; nCntField++)
@@ -235,7 +217,7 @@ void ResetField(bool bLost)
 
 		VERTEX_3D* pVtx;					// 頂点情報へのポインタ
 
-	/*** 頂点バッファの設定 ***/
+		/*** 頂点バッファの設定 ***/
 		g_pVtxBuffField->Lock(0, 0, (void**)&pVtx, 0);
 
 		for (int nCntField = 0; nCntField < MAX_FIELD; nCntField++)
@@ -339,6 +321,8 @@ void SetField(D3DXVECTOR3 pos, D3DXVECTOR3 move, D3DXVECTOR3 rot, float fWidth, 
 
 			g_aField[nCntField].bUse = true;		// 使用状態に設定
 
+			g_nNumField++;							// 床の使用数加算
+
 			break;
 		}
 
@@ -385,4 +369,20 @@ bool CollisionFloor(D3DXVECTOR3 *pPos, D3DXVECTOR3 *pPosOld, D3DXVECTOR3 *pMove,
 	}
 
 	return bLand;
+}
+
+//================================================================================================================
+// --- 床の取得処理 ---
+//================================================================================================================
+Field* GetField(int nIdx)
+{
+	return &g_aField[nIdx];
+}
+
+//================================================================================================================
+// --- 床の使用数取得処理 ---
+//================================================================================================================
+int GetNumField(void)
+{
+	return g_nNumField;
 }

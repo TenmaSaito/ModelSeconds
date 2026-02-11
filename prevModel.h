@@ -1,11 +1,11 @@
 //================================================================================================================
 //
-// DirectXのモード切り替え用のヘッダーファイル [mode.h]
+// DirectXのプレビューモデル表示用ヘッダファイル [prevModel.h]
 // Author : TENMA
 //
 //================================================================================================================
-#ifndef _MODE_H_
-#define _MODE_H_
+#ifndef _PREVMODEL_H_
+#define _PREVMODEL_H_
 
 //**********************************************************************************
 //*** インクルードファイル ***
@@ -16,25 +16,27 @@
 //*** マクロ定義 ***
 //**********************************************************************************
 
-//**********************************************************************************
-//*** 画面モードの種類 ***
-//**********************************************************************************
-typedef enum
+//*************************************************************************************************
+//*** モデル情報構造体の定義 ***
+//*************************************************************************************************
+typedef struct PREVMODEL
 {
-	MODE_EDIT,				// エディタ画面
-	MODE_MAX
-}MODE;
+	D3DXVECTOR3 pos;		// 3Dモデルの位置
+	D3DXVECTOR3 rot;		// 3Dモデルの向き
+	D3DXMATRIX mtxWorld;	// ワールドマトリックス
+	int nIdx3Dmodel;		// モデルデータのインデックス
+	bool bUse;				// 格納状況
+} PREVMODEL;
+
+typedef struct PREVMODEL *PPREVMODEL, *LPPREVMODEL;
 
 //**********************************************************************************
 //*** プロトタイプ宣言 ***
 //**********************************************************************************
-void InitMode(int nThreadNum = 0);
-void UninitMode(int nThreadNum = 0);
-void UpdateMode(int nThreadNum = 0);
-void DrawMode(int nThreadNum = 0);
+void InitPrevModel(void);
+void UninitPrevModel(void);
+void UpdatePrevModel(void);
+void DrawPrevModel(void);
 
-void ResetMode(bool bLost, int nThreadNum = 0);
-
-void SetMode(MODE mode, int nThreadNum = 0);
-MODE GetMode(void);
+void SetPrevModel(int nIdxModelData);
 #endif

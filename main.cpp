@@ -17,6 +17,7 @@
 // MODE
 #include "mode.h"
 #include "edit.h"
+#include "save.h"
 
 //**********************************************************************************
 //*** マクロ定義 ***
@@ -25,24 +26,10 @@
 #define WINDOW_NAME		"ModelSeconds"				// キャプションに表示される名前
 #define SUBCLASS_NAME	"SubWindowClass"			// サブウィンドウクラスの名前
 #define SUBWINDOW_NAME	"プレビュー"				// キャプションに表示される名前
-#define SCREEN_WIDTH		(1280)					// ウィンドウの幅
-#define SCREEN_HEIGHT		(720)					// ウィンドウの高さ
-#define SUBSCREEN_WIDTH		(500)					// サブウィンドウの幅
-#define SUBSCREEN_HEIGHT	(500)					// サブウィンドウの高さ
 #define MODE_ON										// モード切り替え
 #define CREATE_DATE		"2026/02/..."				// 制作日
 #define CREATERS_NAME	"TENMA SAITO\n..."			// 制作者名
 #define	MODEL_TXT		"data\\Scripts\\model.txt"	// デフォルトの外部ファイル
-
-//**********************************************************************************
-//*** Init構造体 ***
-//**********************************************************************************
-typedef struct
-{
-	HINSTANCE hInstance;
-	HWND hWnd;
-	RECT rect;
-} InitStruct;
 
 //**********************************************************************************
 //*** プロトタイプ宣言 ***
@@ -84,6 +71,7 @@ bool g_isFullscreen = false;							// フルスクリーンの使用状況
 RECT g_windowRect;										// ウィンドウサイズ
 bool g_bMainThread;										// メインスレッドの実行状況
 MultiData g_mdDirect3DDevice;							// スレッドセーフ
+TCHAR g_szFileTitle[MAX_PATH] = "ModelSeconds";			// ファイルの名前
 
 // デバイスリセット関連
 bool g_bDeviceLost;										// デバイスの状態
@@ -99,7 +87,6 @@ HWND g_hSubWnd = NULL;									// サブウィンドウへのハンドル
 RECT g_WinRectSub;										// サブウィンドウのレクと
 LPTHREAD g_lpThread = NULL;								// スレッドへのポインタ
 ThreadData *g_pData = NULL;								// データへのポインタ
-InitStruct g_IS;										// InitPrev用構造体
 LPDIRECT3DDEVICE9		g_pD3DDevicePrev = NULL;		// プレビュー画面
 
 //================================================================================================================
@@ -148,8 +135,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInstancePrev, LPSTR lpCmdLine
 
 		return -1;
 	}
-
-	g_IS = { hInstance, hSubWnd, rectSub };
 
 	g_WinRectSub = rectSub;
 
@@ -279,8 +264,13 @@ void MessageLoop(LPMSG lpMsg)
 			if ((dwCurrentTimeAutoSave - dwExecLastTimeAutoSave) >= 300000)
 			{//5分経過
 				dwExecLastTimeAutoSave = dwCurrentTimeAutoSave;
-
-				SaveEditFile();
+				// 保存確認
+				int nID;
+				nID = MessageBox(GetHandleWindow(), "保存してもよろしいですか？", "終了確認メッセージ", (MB_YESNO | MB_ICONINFORMATION));
+				if (nID == IDYES)
+				{
+					SaveModelFile(g_szFileTitle);
+				}
 
 				SetNewSaveTime();
 			}
@@ -305,6 +295,8 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	TCHAR szBuffer[MAX_PATH] = TEXT("");
 	HANDLE hFile = NULL;						// ファイルハンドルhFileをNULLに初期化.
 	DWORD err;
+
+	(void)strcpy(&g_szFileTitle[0], "data\\Scripts\\model.txt");
 
 	switch (uMsg)
 	{
@@ -344,12 +336,45 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case ID_NAMEDSAVE:		// 名前を付けて保存
+			GetWindowText(hWnd, szFileTitle, sizeof(char) * MAX_PATH);
+			ZeroMemory(&oFileName, sizeof(OPENFILENAME));											// 初期化
+			oFileName.lStructSize = sizeof(OPENFILENAME);											// 構造体のサイズ.
+			oFileName.hwndOwner = hWnd;																// オーナーウィンドウ.
+			oFileName.lpstrFilter = TEXT("テキストファイル (*.txt)\0*.txt\0\0");					// フィルタ(指定したパターンのファイルだけ見える.)
+			oFileName.lpstrFile = tszFilePath;														// 入力されたファイルパス.
+			oFileName.Flags = OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;								// 既にファイルがある時, 上書きするかの確認を表示.
+			oFileName.nFilterIndex = 1;																// ファイルフィルター
+			oFileName.nMaxFile = MAX_PATH;															// 上記の文字列のデータの最大数
+			oFileName.lpstrDefExt = TEXT(".txt");													// 拡張子の自動追加
+			oFileName.nMaxFileTitle = 64;															// ファイル名の最大データ数
+			oFileName.lpstrFileTitle = szFileTitle;													// ファイル名
+			oFileName.lpstrTitle = NULL;															// ダイアログボックスの名前
+
+			// ファイル選択.
+			if (!GetSaveFileName(&oFileName))
+			{ // GetSaveFileNameでファイルを選択.
+
+				// 選択しなかった場合(キャンセル)
+				break;
+			}
+
+			// ファイル名を渡して保存
+			SaveModelFile(oFileName.lpstrFile);
+
+			SetWindowText(hWnd, oFileName.lpstrFile);
+			memset(g_szFileTitle, NULL, sizeof(g_szFileTitle));
+			strcpy(g_szFileTitle, oFileName.lpstrFile);
 
 			break;
 
 		case ID_UPDATE:			// 上書き保存
-
-			SaveEditFile();
+			// 保存確認
+			int nID;
+			nID = MessageBox(hWnd, "保存してもよろしいですか？", "終了確認メッセージ", (MB_YESNO | MB_ICONINFORMATION));
+			if (nID == IDYES)
+			{
+				SaveModelFile(g_szFileTitle);
+			}
 
 			break;
 

@@ -43,8 +43,10 @@
 //**********************************************************************************
 //*** マクロ定義 ***
 //**********************************************************************************
-#define SCREEN_WIDTH		(1280)				// ウィンドウの幅
-#define SCREEN_HEIGHT		(720)				// ウィンドウの高さ
+#define SCREEN_WIDTH		(1280)					// ウィンドウの幅
+#define SCREEN_HEIGHT		(720)					// ウィンドウの高さ
+#define SUBSCREEN_WIDTH		(500)					// サブウィンドウの幅
+#define SUBSCREEN_HEIGHT	(500)					// サブウィンドウの高さ
 #define FVF_VERTEX_2D		(D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1)					// 頂点フォーマット (2D)
 #define FVF_VERTEX_3D		(D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX1)		// 頂点フォーマット (3D)
 #define D3DXVECTOR2_NULL	D3DXVECTOR2(0.0f, 0.0f)					// D3DXVECTOR2のNULL

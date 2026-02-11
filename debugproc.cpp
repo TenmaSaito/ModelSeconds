@@ -99,6 +99,11 @@ void DrawDebugProc(int nThreadNum)
 #ifdef _DEBUG
 	RECT rect = { 0,0,SCREEN_WIDTH,SCREEN_HEIGHT };			// 画面サイズ
 
+	if (nThreadNum == 1)
+	{
+		rect = { 0, 0, SUBSCREEN_WIDTH, SUBSCREEN_HEIGHT };
+	}
+
 	if (g_apFont[nThreadNum] != NULL)
 	{
 		/*** テキストの描画 ***/
