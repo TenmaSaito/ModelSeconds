@@ -1,6 +1,6 @@
 #==============================================
 #
-# ModelSeconds [data\Scripts\test.txt]
+# ModelSeconds [test.txt]
 # Author : 
 #
 #==============================================
