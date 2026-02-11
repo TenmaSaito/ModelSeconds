@@ -22,13 +22,27 @@
 //*** マクロ定義 ***
 //**********************************************************************************
 #define CLASS_NAME		"WindowClass"				// ウィンドウクラスの名前
-#define WINDOW_NAME		"ウィンドウ表示処理"		// キャプションに表示される名前
+#define WINDOW_NAME		"ModelSeconds"				// キャプションに表示される名前
+#define SUBCLASS_NAME	"SubWindowClass"			// サブウィンドウクラスの名前
+#define SUBWINDOW_NAME	"プレビュー"				// キャプションに表示される名前
 #define SCREEN_WIDTH		(1280)					// ウィンドウの幅
 #define SCREEN_HEIGHT		(720)					// ウィンドウの高さ
+#define SUBSCREEN_WIDTH		(500)					// サブウィンドウの幅
+#define SUBSCREEN_HEIGHT	(500)					// サブウィンドウの高さ
 #define MODE_ON										// モード切り替え
 #define CREATE_DATE		"2026/02/..."				// 制作日
 #define CREATERS_NAME	"TENMA SAITO\n..."			// 制作者名
 #define	MODEL_TXT		"data\\Scripts\\model.txt"	// デフォルトの外部ファイル
+
+//**********************************************************************************
+//*** Init構造体 ***
+//**********************************************************************************
+typedef struct
+{
+	HINSTANCE hInstance;
+	HWND hWnd;
+	RECT rect;
+} InitStruct;
 
 //**********************************************************************************
 //*** プロトタイプ宣言 ***
@@ -40,13 +54,24 @@ void UninitDlgBox(HWND hDlgWnd);
 void UpdateDlgBoxPos(HWND hWnd, HWND hDlgWnd);
 void MessageLoop(LPMSG lpMsg);
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK WindowProcPrev(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HRESULT Init(HINSTANCE hInstance, HWND hWnd, BOOL bWindow);
 void Uninit(void);
 void Update(void);
 void Draw(void);
+
+// プレビュー画面
+bool InitSubWindow(HINSTANCE hInstance, RECT rect, LPWNDCLASSEX lpWcex, HWND* phWnd);
+void UninitSubWindow(LPWNDCLASSEX lpWcex);
+HRESULT InitPrev(HINSTANCE hInstance, HWND hWnd, BOOL bWindow);
+void UninitPrev(void);
+void UpdatePrev(void);
+void DrawPrev(void);
+
 void ToggleFullscreen(HWND hWnd);
-CREATE_LOOPID(loopThread);
+CREATE_LOOPID(Prev);
 void SetDeviceReset(void);
+void SetDeviceResetPrev(void);
 
 //**********************************************************************************
 //*** グローバル変数 ***
@@ -62,10 +87,20 @@ MultiData g_mdDirect3DDevice;							// スレッドセーフ
 
 // デバイスリセット関連
 bool g_bDeviceLost;										// デバイスの状態
+bool g_bDeviceLostPrev;									// デバイスの状態
 D3DPRESENT_PARAMETERS g_resetParam;						// デバイスリセット用
+D3DPRESENT_PARAMETERS g_resetParamPrev;					// デバイスリセット用
 
 // オートセーブ関連
 char g_aLastSaveTime[MAX_PATH];							// 最終保存時間
+
+// マルチスレッド関連
+HWND g_hSubWnd = NULL;									// サブウィンドウへのハンドル
+RECT g_WinRectSub;										// サブウィンドウのレクと
+LPTHREAD g_lpThread = NULL;								// スレッドへのポインタ
+ThreadData *g_pData = NULL;								// データへのポインタ
+InitStruct g_IS;										// InitPrev用構造体
+LPDIRECT3DDEVICE9		g_pD3DDevicePrev = NULL;		// プレビュー画面
 
 //================================================================================================================
 // --- メイン関数 ---
@@ -76,9 +111,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInstancePrev, LPSTR lpCmdLine
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF | _CRTDBG_CHECK_ALWAYS_DF);			// メモリリーク検知用のフラグ
 #endif // _DEBUG
 	HWND hWnd = NULL;							// ウィンドウハンドル
+	HWND hSubWnd = NULL;						// サブウィンドウハンドル
 	MSG msg = {};								// メッセージを格納する変数
 	RECT rect = { 0,0,SCREEN_WIDTH,SCREEN_HEIGHT };
+	RECT rectSub = { 0,0,SUBSCREEN_WIDTH,SUBSCREEN_HEIGHT };
 	WNDCLASSEX wcex = {};
+	WNDCLASSEX wcexSub = {};
+
+	Thread tPrev;
+	ThreadData tPrevData =
+	{
+		0,
+		60,
+		-1,
+		&Prev,
+		false,
+		0,
+		true
+	};
+
+	g_pData = &tPrevData;
 
 	// ウィンドウ作成
 	if (!InitWindow(hInstance, rect, &wcex, &hWnd))
@@ -87,6 +139,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInstancePrev, LPSTR lpCmdLine
 
 		return -1;
 	}
+
+	// サブウィンドウ作成
+	if (!InitSubWindow(hInstance, rectSub, &wcexSub, &hSubWnd))
+	{ // サブウィンドウ作成失敗
+		UninitWindow(&wcex);
+		UninitSubWindow(&wcexSub);
+
+		return -1;
+	}
+
+	g_IS = { hInstance, hSubWnd, rectSub };
+
+	g_WinRectSub = rectSub;
+
+	g_hSubWnd = hSubWnd;
 
 	g_hWnd = hWnd;
 	g_bMainThread = true;
@@ -98,20 +165,43 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hInstancePrev, LPSTR lpCmdLine
 		return -1;
 	}
 
+	if (FAILED(InitPrev(hInstance, hSubWnd, TRUE)))
+	{
+		MessageBox(hWnd, "Initに失敗しました。", "Error (0)", MB_ICONERROR);
+		return -1;
+	}
+
+	if (!tPrev.CreateThread(&tPrevData, DEFAULT_PROC, true, &g_lpThread))
+	{
+		return -1;
+	}
+
 	// ウィンドウの表示
 	ShowWindow(hWnd, nCmdShow);					// ウィンドウの表示状態を設定
 	UpdateWindow(hWnd);							// クライアント領域を更新
+
+	//// ウィンドウの表示
+	ShowWindow(hSubWnd, nCmdShow);				// ウィンドウの表示状態を設定
+	UpdateWindow(hSubWnd);						// クライアント領域を更新
 
 	SetNewSaveTime();							// 保存時間を更新
 
 	// メッセージループ
 	MessageLoop(&msg);
 	
+	// サブスレッドの終了
+	tPrev.Release();
+
+	// サブスレッドの終了
+	UninitPrev();
+
 	// DirectXの終了
 	Uninit();
 
 	// ウィンドウの削除
 	UninitWindow(&wcex);
+
+	UninitSubWindow(&wcexSub);
 
 	// マルチスレッドのクリティカルセクションの終了
 	g_mdDirect3DDevice.~MultiData();
@@ -316,6 +406,32 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		DestroyWindow(hWnd);
 
 		break;
+	}
+
+	return DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
+//================================================================================================================
+// サブウィンドウプロシージャ
+//================================================================================================================
+LRESULT CALLBACK WindowProcPrev(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	int nID;
+
+	//ファイルオープン関係
+	OPENFILENAME oFileName = {};
+	TCHAR szFileName[MAX_PATH] = TEXT("");
+	TCHAR tszFilePath[MAX_PATH] = { 0 };		// ファイルパスを格納するTCHAR型配列(長さ260)も0で初期化.
+	TCHAR szFileTitle[MAX_PATH] = TEXT("");
+	TCHAR szBuffer[MAX_PATH] = TEXT("");
+	HANDLE hFile = NULL;						// ファイルハンドルhFileをNULLに初期化.
+	DWORD err;
+
+	switch (uMsg)
+	{
+	case WM_CLOSE:
+		DestroyWindow(hWnd);
+		return 0;
 	}
 
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -701,6 +817,8 @@ void SetDeviceReset(void)
 						"( *｀ω´)");
 				}
 			}
+
+			SetDeviceResetPrev();
 		}
 		else
 		{ // デバイス復旧失敗時
@@ -719,6 +837,32 @@ void SetDeviceReset(void)
 			}
 
 			PostQuitMessage(0);
+		}
+	}
+}
+
+//================================================================================================================
+// --- プレビュー画面のデバイスのリセット ---
+//================================================================================================================
+void SetDeviceResetPrev(void)
+{
+	HRESULT hr = g_pD3DDevicePrev->TestCooperativeLevel();
+	if (hr == D3DERR_DEVICELOST)
+	{
+		return;
+	}
+	else if (hr == D3DERR_DEVICENOTRESET)
+	{
+		hr = g_pD3DDevicePrev->Reset(&g_resetParamPrev);
+		if (hr == D3D_OK)
+		{ // デバイス復旧時
+			g_bDeviceLostPrev = false;
+		}
+		else
+		{ // デバイス復旧失敗時
+			MyMathUtil::GenerateMessageBox(MB_ICONERROR,
+				"...Sorry.",
+				"プレビュー画面のデバイスの復旧に失敗しました...\nごめんね...(下のはお詫び猫)\n\n  A_A___\n_(U U|||)_");
 		}
 	}
 }
@@ -793,9 +937,221 @@ void ToggleFullscreen(HWND hWnd)
 	g_isFullscreen = !g_isFullscreen;
 }
 
-CREATE_LOOPID(loopThread)
+//===============================================================================================================
+// --- サブスレッド処理 ---
+//===============================================================================================================
+CREATE_LOOPID(Prev)
 {
+	UpdatePrev();
 
+	DrawPrev();
+}
+
+//================================================================================================================
+// --- 子ウィンドウ作成 ---
+//================================================================================================================
+bool InitSubWindow(HINSTANCE hInstance, RECT rect, LPWNDCLASSEX lpWcex, HWND* phWnd)
+{
+	HWND hWnd = NULL;
+
+	*lpWcex =
+	{
+		sizeof(WNDCLASSEX),						// ウィンドウクラスのメモリサイズ
+		CS_CLASSDC,								// ウィンドウのスタイル
+		WindowProcPrev,							// ウィンドウプロシージャ
+		0,										// 0
+		0,										// 0
+		hInstance,								// インスタンスハンドル
+		LoadIcon(NULL,IDI_APPLICATION),			// タスクバーのアイコン
+		LoadCursor(NULL,IDC_ARROW),				// マウスカーソル
+		(HBRUSH)(COLOR_WINDOW + 3),				// クライアント領域の背景色
+		NULL,									// メニューバー
+		SUBCLASS_NAME,							// ウィンドウクラスの名前
+		NULL									// ファイルのアイコン
+	};
+
+	// ウィンドウクラスの登録
+	RegisterClassEx(lpWcex);
+
+	// クライアント領域を指定のサイズに調整
+	AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+
+	// ウィンドウの生成
+	hWnd = CreateWindowEx(
+		0,										// 拡張ウィンドウスタイル
+		SUBCLASS_NAME,							// ウィンドウクラスの名前
+		SUBWINDOW_NAME,							// ウィンドウの名前
+		WS_OVERLAPPEDWINDOW,					// ウィンドウスタイル
+		CW_USEDEFAULT,							// ウィンドウの左上X座標
+		CW_USEDEFAULT,							// ウィンドウの左上Y座標
+		(rect.right - rect.left),				// ウィンドウの幅
+		(rect.bottom - rect.top),				// ウィンドウの高さ
+		NULL,									// 親ウィンドウのハンドル
+		NULL,									// メニュー(もしくは子ウィンドウ)ハンドル
+		hInstance,								// インスタンスハンドル
+		NULL);									// ウィンドウ作成データ
+
+	if (hWnd == NULL)
+	{
+		MessageBox(NULL, "ウィンドウハンドルが確保されていません!", "警告！", MB_ICONWARNING);
+		return false;
+	}
+
+	if (phWnd != NULL) *phWnd = hWnd;
+
+	return true;
+}
+
+//================================================================================================================
+// --- 子ウィンドウ削除 ---
+//================================================================================================================
+void UninitSubWindow(LPWNDCLASSEX lpWcex)
+{
+	// ウィンドウクラスの登録解除
+	UnregisterClass(SUBCLASS_NAME, lpWcex->hInstance);
+}
+
+//===============================================================================================================
+// --- 初期化 ---
+//===============================================================================================================
+HRESULT InitPrev(HINSTANCE hInstance, HWND hWnd, BOOL bWindow)
+{
+	D3DDISPLAYMODE d3ddm;			// ディスプレイモード
+	D3DPRESENT_PARAMETERS d3dpp;	// プレゼンテーションパラメータ		
+
+	// 現在のディスプレイモードを取得
+	if (FAILED(g_pD3D->GetAdapterDisplayMode(D3DADAPTER_DEFAULT,
+		&d3ddm)))
+	{
+		MessageBox(hWnd, "ディスプレイモードの取得に失敗しました。", "Error (-1)", MB_ICONERROR);
+		return E_FAIL;
+	}
+
+	// デバイスのプレゼンテーションパラメータの設定
+	ZeroMemory(&d3dpp, sizeof(d3dpp));			// パラメータのゼロクリア
+
+	d3dpp.BackBufferWidth = SUBSCREEN_WIDTH;		// ゲームの画面サイズ(横)
+	d3dpp.BackBufferHeight = SUBSCREEN_HEIGHT;		// ゲームの画面サイズ(高さ)
+	d3dpp.BackBufferFormat = d3ddm.Format;		// バックバッファの形式
+	d3dpp.BackBufferCount = 1;					// バックバッファの数
+	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;	// ダブルバッファの切り替え(映像信号と同期)
+	d3dpp.EnableAutoDepthStencil = TRUE;		// デプスバッファとステンシルバッファを作成
+	d3dpp.AutoDepthStencilFormat = D3DFMT_D16;	// デプスバッファとして16bitを使う
+	d3dpp.Windowed = bWindow;					// ウィンドウモード
+	d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;			// リフレッシュレート
+	d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;			// インターバル
+
+	// Direct3Dデバイスの作成
+	if (FAILED(g_pD3D->CreateDevice(D3DADAPTER_DEFAULT,
+		D3DDEVTYPE_HAL,
+		hWnd,
+		D3DCREATE_HARDWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED,
+		&d3dpp,
+		&g_pD3DDevicePrev)))
+	{
+		if (FAILED(g_pD3D->CreateDevice(D3DADAPTER_DEFAULT,
+			D3DDEVTYPE_HAL,
+			hWnd,
+			D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED,
+			&d3dpp,
+			&g_pD3DDevicePrev)))
+		{
+			if (FAILED(g_pD3D->CreateDevice(D3DADAPTER_DEFAULT,
+				D3DDEVTYPE_REF,
+				hWnd,
+				D3DCREATE_SOFTWARE_VERTEXPROCESSING | D3DCREATE_MULTITHREADED,
+				&d3dpp,
+				&g_pD3DDevicePrev)))
+			{
+				MessageBox(hWnd, "Direct3Dデバイスの作成に失敗しました。", "Error (-1)", MB_ICONERROR);
+				return E_FAIL;
+			}
+		}
+	}
+
+	// リセット時のコピー
+	g_resetParamPrev = d3dpp;
+
+	// レンダーステートの設定(消さないこと！ALPHA値の設定を適用する為の設定！)
+	g_pD3DDevicePrev->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
+	g_pD3DDevicePrev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+	g_pD3DDevicePrev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+	g_pD3DDevicePrev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+
+	// サンプラーステートの設定
+	g_pD3DDevicePrev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);		// テクスチャの拡縮補間の設定
+	g_pD3DDevicePrev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+	g_pD3DDevicePrev->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);		// テクスチャの繰り返しの設定
+	g_pD3DDevicePrev->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
+
+	// テクスチャステージステートの設定(テクスチャのアルファブレンドの設定[テクスチャとポリゴンのALPHA値を混ぜる！])
+	g_pD3DDevicePrev->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+	g_pD3DDevicePrev->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+	g_pD3DDevicePrev->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_CURRENT);
+
+	InitDebugProc(1);
+}
+
+//===============================================================================================================
+// --- 終了 ---
+//===============================================================================================================
+void UninitPrev(void)
+{
+	UninitDebugProc(1);
+
+	// Direct3Dデバイスの破棄
+	RELEASE(g_pD3DDevicePrev);
+}
+
+//===============================================================================================================
+// --- 更新 ---
+//===============================================================================================================
+void UpdatePrev(void)
+{
+	PrintDebugProc(1, "FPS : %d", g_pData->nFrame);
+}
+
+//===============================================================================================================
+// --- 描画 ---
+//===============================================================================================================
+void DrawPrev(void)
+{
+	HRESULT hr = S_OK;
+	LPDIRECT3DDEVICE9 pDevice = GetDevicePrev();
+
+	if (g_bDeviceLostPrev != true)
+	{
+		// 画面クリア(バックバッファとZバッファのクリア)
+		pDevice->Clear(0, NULL,
+			(D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER),
+			D3DCOLOR_RGBA(0, 0, 0, 0), 1.0f, 0);
+
+		// 描画開始
+		if (SUCCEEDED(pDevice->BeginScene()))
+		{// 描画開始が成功した場合
+
+			DrawDebugProc(1);
+
+			// 描画終了
+			pDevice->EndScene();
+		}
+
+		// バックバッファとフロントバッファの入れ替え
+		hr = pDevice->Present(NULL, NULL, NULL, NULL);
+	}
+
+	if (hr == D3DERR_DEVICELOST)
+	{
+		g_bDeviceLostPrev = true;
+	}
+}
+
+//===============================================================================================================
+// --- プレビュー画面のデバイスの取得 ---
+//===============================================================================================================
+LPDIRECT3DDEVICE9 GetDevicePrev(void)
+{
+	return g_pD3DDevicePrev;
 }
 
 //===============================================================================================================

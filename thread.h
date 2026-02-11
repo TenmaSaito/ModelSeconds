@@ -75,6 +75,8 @@ typedef struct ThreadData
 
 	int nSleepTime;				// ˆê’â~ŠÔ
 	bool bPlay;					// Ä¶’†‚©
+
+	int nFrame;					// Œ»İ‚ÌFPS
 } ThreadData;
 
 //**********************************************************************************

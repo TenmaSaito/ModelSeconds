@@ -181,12 +181,16 @@ unsigned WINAPI DefThreadProc(LPVOID lpParam)
 	MSG msg = {};
 	DWORD dwCurrentTime = 0;	// 現在時刻
 	DWORD dwExecLastTime = 0;	// 最後に処理した時刻
+	DWORD dwFrameCount;					// フレームカウント
+	DWORD dwFPSLastTime;				// 最後にFPSを計測した時刻
 	DWORD dwCurrentTimeSleep = 0;		// スリーブカウント
 	DWORD dwExecLastTimeSleep = 0;		// 最後にスリーブカウントを計測した時刻
 	int nLoopCount = 0;			// ループ回数
 
 	dwCurrentTime = 0;					// 初期化
 	dwExecLastTime = timeGetTime();		// 現在時刻を取得
+	dwFrameCount = 0;
+	dwFPSLastTime = timeGetTime();
 
 	// メインスレッドが実行されている間、ループ
 	while (1)
@@ -205,6 +209,15 @@ unsigned WINAPI DefThreadProc(LPVOID lpParam)
 			{
 				dwCurrentTime = timeGetTime();				// 現在時刻を取得
 
+				if ((dwCurrentTime - dwFPSLastTime) >= 500)
+				{// 0.5秒経過
+					// FPSを計測
+					tData->nFrame = (dwFrameCount * 1000) / (dwCurrentTime - dwFPSLastTime);
+
+					dwFPSLastTime = dwCurrentTime;			// FPSを計測した時刻を取得
+					dwFrameCount = 0;						// フレームカウントをクリア
+				}
+
 				// ループ間隔
 				if ((dwCurrentTime - dwExecLastTime) >= (1000 / nFPS))
 				{ //60分の1秒経過
@@ -215,6 +228,7 @@ unsigned WINAPI DefThreadProc(LPVOID lpParam)
 						tData->LoopID();						// スレッドループ中の処理
 					}
 
+					dwFrameCount++;							// フレームカウントを加算
 					nLoopCount++;
 				}
 			}
