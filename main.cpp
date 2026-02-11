@@ -264,8 +264,13 @@ void MessageLoop(LPMSG lpMsg)
 			if ((dwCurrentTimeAutoSave - dwExecLastTimeAutoSave) >= 300000)
 			{//5分経過
 				dwExecLastTimeAutoSave = dwCurrentTimeAutoSave;
-
-				SaveEditFile();
+				// 保存確認
+				int nID;
+				nID = MessageBox(GetHandleWindow(), "保存してもよろしいですか？", "終了確認メッセージ", (MB_YESNO | MB_ICONINFORMATION));
+				if (nID == IDYES)
+				{
+					SaveEditFile();
+				}
 
 				SetNewSaveTime();
 			}
@@ -361,8 +366,13 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case ID_UPDATE:			// 上書き保存
-
-			SaveEditFile();
+			// 保存確認
+			int nID;
+			nID = MessageBox(hWnd, "保存してもよろしいですか？", "終了確認メッセージ", (MB_YESNO | MB_ICONINFORMATION));
+			if (nID == IDYES)
+			{
+				SaveEditFile();
+			}
 
 			break;
 
