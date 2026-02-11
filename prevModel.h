@@ -38,5 +38,5 @@ void UninitPrevModel(void);
 void UpdatePrevModel(void);
 void DrawPrevModel(void);
 
-void SetPrevModel(D3DXVECTOR3 pos, D3DXVECTOR3 rot, int nIdxModelData);
+void SetPrevModel(int nIdxModelData);
 #endif
