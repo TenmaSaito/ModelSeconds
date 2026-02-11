@@ -9,6 +9,7 @@
 //**********************************************************************************
 #include "3DModel.h"
 #include "modeldata.h"
+#include "camera.h"
 #include "mathUtil.h"
 
 using namespace MyMathUtil;
@@ -17,6 +18,10 @@ using namespace MyMathUtil;
 //*** マクロ定義 ***
 //*************************************************************************************************
 #define MAX_3DMODEL		(1024)		// 設置できるモデルの最大数
+
+//*************************************************************************************************
+//*** プロトタイプ宣言 ***
+//*************************************************************************************************
 
 //*************************************************************************************************
 //*** グローバル変数 ***
@@ -78,9 +83,21 @@ void Draw3DModel(void)
 
 			// モデルデータを取得
 			LPMODELDATA pModelData = GetModelData(p3DModel->nIdx3Dmodel);
-			Draw3DModelFromModelData(pDevice,
-				pModelData,
-				&p3DModel->mtxWorld);
+			if (p3DModel->bAlpha == true)
+			{
+				D3DCOLORVALUE diffuse = { 0.0f, 1.0f, 0.0f, 0.5f };
+
+				Draw3DModelByCustomColorFromModelData(pDevice,
+					pModelData,
+					&p3DModel->mtxWorld,
+					diffuse);
+			}
+			else
+			{
+				Draw3DModelFromModelData(pDevice,
+					pModelData,
+					&p3DModel->mtxWorld);
+			}
 		}
 	}
 
@@ -110,6 +127,7 @@ int Set3DModel(D3DXVECTOR3 pos, D3DXVECTOR3 rot, int nIdxModelData)
 			p3DModel->rot = rot;
 			p3DModel->nIdx3Dmodel = nIdxModelData;
 			p3DModel->bUse = true;
+			p3DModel->bAlpha = false;
 			g_nNum3DModel++;
 
 			break;
