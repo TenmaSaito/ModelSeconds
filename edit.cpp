@@ -20,6 +20,7 @@
 #include "Texture.h"
 #include "mode.h"
 #include "save.h"
+#include "controller.h"
 
 //**********************************************************************************
 //*** マクロ定義 ***
@@ -67,6 +68,9 @@ void InitEdit(void)
 	InitModel();
 	LoadModel(g_pFileName);
 
+	/*** コントローラー初期化 ***/
+	InitController();
+
 	D3DVIEWPORT9 viewport;
 	viewport.Width = SCREEN_WIDTH;
 	viewport.Height = SCREEN_HEIGHT;
@@ -107,6 +111,8 @@ void UninitEdit(void)
 
 	/*** スカイボックスの終了 ***/
 	UninitSkybox();
+
+	/*** コントローラー終了 ***/
 }
 
 //==================================================================================
@@ -134,6 +140,9 @@ void UpdateEdit(void)
 
 	/*** スカイボックスの更新 ***/
 	UpdateSkybox();
+
+	/*** コントローラーの更新 ***/
+	UpdateController();
 
 	if (GetKeyboardTrigger(DIK_BACK) == true)
 	{
@@ -163,6 +172,9 @@ void DrawEdit(void)
 
 		/*** 3Dモデルの描画 ***/
 		Draw3DModel();
+
+		/*** コントローラーの描画 ***/
+		DrawController();
 
 		// VERTEX_2D ============================================
 		/*** Aの描画 ***/

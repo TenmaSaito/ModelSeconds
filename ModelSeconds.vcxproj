@@ -154,6 +154,7 @@
     <ClCompile Include="2Dpolygon.cpp" />
     <ClCompile Include="3Dmodel.cpp" />
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="controller.cpp" />
     <ClCompile Include="debugproc.cpp" />
     <ClCompile Include="edit.cpp" />
     <ClCompile Include="field.cpp" />
@@ -173,6 +174,7 @@
     <ClInclude Include="2Dpolygon.h" />
     <ClInclude Include="3Dmodel.h" />
     <ClInclude Include="camera.h" />
+    <ClInclude Include="controller.h" />
     <ClInclude Include="debugproc.h" />
     <ClInclude Include="edit.h" />
     <ClInclude Include="field.h" />
