@@ -56,6 +56,7 @@ void UpdateCamera(int nIdxCamera)
 {
 	Camera *pCamera = &g_aCamera[nIdxCamera];
 
+#if 0
 	/*** 視点の平行移動！ ***/
 	if (GetKeyboardPress(DIK_W))
 	{ // Wを押したとき
@@ -143,6 +144,8 @@ void UpdateCamera(int nIdxCamera)
 	{
 		g_fSpdCamera *= 0.5f;
 	}
+
+#endif // 0
 
 	/*** カメラの回転！(注視点中心) ***/
 	if (GetKeyboardPress(DIK_E))

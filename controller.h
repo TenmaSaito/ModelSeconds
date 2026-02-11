@@ -23,6 +23,7 @@ typedef enum
 	CONTROLTYPE_SELECT = 0,
 	CONTROLTYPE_POS,
 	CONTROLTYPE_ROT,
+	CONTROLTYPE_SET,
 	CONTROLTYPE_MAX
 
 }ControlType;
@@ -36,4 +37,5 @@ void UpdateController(void);
 void DrawController(void);
 
 void SearchUseModel(bool bInDe);
+void MovePosR(void);
 #endif
