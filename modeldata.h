@@ -41,10 +41,10 @@ typedef struct MODELDATA* PMODELDATA, * LPMODELDATA;
 //**********************************************************************************
 //*** プロトタイプ宣言 ***
 //**********************************************************************************
-void InitModelData(void);
-void UninitModelData(void);
-void ResetModelData(bool bLost);
+void InitModelData(int nThreadNum = 0);
+void UninitModelData(int nThreadNum = 0);
+void ResetModelData(bool bLost, int nThreadNum = 0);
 
-HRESULT LoadModelData(const char* pXFileName, int *pOutnIdx);
-LPMODELDATA GetModelData(int nType);
+HRESULT LoadModelData(const char* pXFileName, int *pOutnIdx, int nThreadNum = 0);
+LPMODELDATA GetModelData(int nType, int nThreadNum = 0);
 #endif

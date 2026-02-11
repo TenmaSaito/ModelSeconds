@@ -164,6 +164,7 @@
     <ClCompile Include="mathUtil.cpp" />
     <ClCompile Include="mode.cpp" />
     <ClCompile Include="model.cpp" />
+    <ClCompile Include="prevModel.cpp" />
     <ClCompile Include="save.cpp" />
     <ClCompile Include="skybox.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -184,6 +185,7 @@
     <ClInclude Include="mathUtil.h" />
     <ClInclude Include="mode.h" />
     <ClInclude Include="model.h" />
+    <ClInclude Include="prevModel.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="save.h" />
     <ClInclude Include="skybox.h" />

@@ -307,6 +307,7 @@ bool LoadModel(const char *pFileName)
 
 					// ÉÇÉfÉãÇì«Ç›çûÇﬁ
 					LoadModelData(&g_ModelName[nCntModel][0], &g_Model[nCntModel].nIdxModelData);
+					LoadModelData(&g_ModelName[nCntModel][0], &g_Model[nCntModel].nIdxModelData, 1);
 					g_Model[nCntModel].bUse = true;
 
 					nCntModel++;

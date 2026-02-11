@@ -20,200 +20,382 @@ using namespace MyMathUtil;
 //*** グローバル変数 ***
 //*************************************************************************************************
 MODELDATA g_aModelData[MAX_MODELDATA];		// オブジェクト情報
+MODELDATA g_aModelDataPrev[MAX_MODELDATA];	// プレビュー用オブジェクト情報
 char g_aResetFileNameXmodel[MAX_MODELDATA][MAX_PATH];
+char g_aResetFileNameXmodelPrev[MAX_MODELDATA][MAX_PATH];
 int g_nNumLoadModelData;
+int g_nNumLoadModelDataPrev;
 
 //================================================================================================================
 // --- 初期化 ---
 //================================================================================================================
-void InitModelData(void)
+void InitModelData(int nThreadNum)
 {
-	// モデルデータを初期化
-	ZeroMemory(&g_aModelData[0], sizeof(MODELDATA) * (MAX_MODELDATA));
+	if (nThreadNum == 0)
+	{
+		// モデルデータを初期化
+		ZeroMemory(&g_aModelData[0], sizeof(MODELDATA) * (MAX_MODELDATA));
 
-	// リセット用データを初期化
-	ZeroMemory(&g_aResetFileNameXmodel[0], sizeof(g_aResetFileNameXmodel));
+		// リセット用データを初期化
+		ZeroMemory(&g_aResetFileNameXmodel[0], sizeof(g_aResetFileNameXmodel));
 
-	// 読み込んだモデルデータの数を初期化
-	g_nNumLoadModelData = 0;
+		// 読み込んだモデルデータの数を初期化
+		g_nNumLoadModelData = 0;
+	}
+	else
+	{
+		// モデルデータを初期化
+		ZeroMemory(&g_aModelDataPrev[0], sizeof(MODELDATA) * (MAX_MODELDATA));
+
+		// リセット用データを初期化
+		ZeroMemory(&g_aResetFileNameXmodelPrev[0], sizeof(g_aResetFileNameXmodel));
+
+		// 読み込んだモデルデータの数を初期化
+		g_nNumLoadModelDataPrev = 0;
+	}
 }
 
 //================================================================================================================
 // --- モデルの読み込み ---
 //================================================================================================================
-HRESULT LoadModelData(_In_ const char* pXFileName, int *pOutnIdx)
+HRESULT LoadModelData(const char* pXFileName, int *pOutnIdx, int nThreadNum)
 {
-	/*** デバイスの取得 ***/
-	LPDIRECT3DDEVICE9 pDevice = GetDevice();
-	LPMODELDATA pModelData = &g_aModelData[0];
-	D3DXMATERIAL* pMat = NULL;		// マテリアルへのポインタ
-	HRESULT hr = E_FAIL;			// 読み込み成功判定
-	int nNumVtx = 0;				// 頂点数
-	DWORD dwSizeFVF = 0;			// 頂点フォーマットのサイズ
-	BYTE* pVtxBuff = NULL;			// 頂点バッファへのポインタ
-
-	if (pOutnIdx)
-	{ // 読み込み失敗時の値を格納
-		*pOutnIdx = ERROR_XFILE;
-	}
-
-	/*** 過去に読み込んでいないか確認 ***/
-	for (int nCntXmodel = 0; nCntXmodel < MAX_MODELDATA; nCntXmodel++, pModelData++)
+	if (nThreadNum == 0)
 	{
-		if (strcmp(&pModelData->aXFileName[0], pXFileName) == NULL)
-		{ // 読み込み済みの場合
-			if (pOutnIdx)
-			{ // 読みこみモデルの値を格納
-				*pOutnIdx = nCntXmodel;
-			}
+		/*** デバイスの取得 ***/
+		LPDIRECT3DDEVICE9 pDevice = GetDevice();
+		LPMODELDATA pModelData = &g_aModelData[0];
+		D3DXMATERIAL* pMat = NULL;		// マテリアルへのポインタ
+		HRESULT hr = E_FAIL;			// 読み込み成功判定
+		int nNumVtx = 0;				// 頂点数
+		DWORD dwSizeFVF = 0;			// 頂点フォーマットのサイズ
+		BYTE* pVtxBuff = NULL;			// 頂点バッファへのポインタ
 
-			EndDevice();
-
-			return S_OK;
+		if (pOutnIdx)
+		{ // 読み込み失敗時の値を格納
+			*pOutnIdx = ERROR_XFILE;
 		}
-	}
 
-	pModelData = &g_aModelData[0];
-
-	/*** Xファイルの読み込み ***/
-	for (int nCntXmodel = 0; nCntXmodel < MAX_MODELDATA; nCntXmodel++, pModelData++)
-	{
-		if (pModelData->bUse != true)
+		/*** 過去に読み込んでいないか確認 ***/
+		for (int nCntXmodel = 0; nCntXmodel < MAX_MODELDATA; nCntXmodel++, pModelData++)
 		{
-			// 使用済みに
-			pModelData->bUse = true;
-			g_nNumLoadModelData++;
-
-			pMat = NULL;
-
-			// Xファイルの読み込み
-			hr = D3DXLoadMeshFromX(pXFileName,			// 読み込むXファイル名
-				D3DXMESH_SYSTEMMEM,
-				pDevice,								// デバイスポインタ
-				NULL,
-				&pModelData->pBuffMat,	// マテリアルへのポインタ
-				NULL,
-				&pModelData->dwNumMat,	// マテリアルの数
-				&pModelData->pMesh);		// メッシュへのポインタ
-
-			strcpy(&g_aResetFileNameXmodel[nCntXmodel][0], pXFileName);
-
-			if (FAILED(hr))
-			{ // 読み込み失敗時
-				GenerateMessageBox(MB_ICONERROR,
-					"ERROR!",
-					"Xファイルの読み込みに失敗しました!\n対象パス : %s",
-					pXFileName);
+			if (strcmp(&pModelData->aXFileName[0], pXFileName) == NULL)
+			{ // 読み込み済みの場合
+				if (pOutnIdx)
+				{ // 読みこみモデルの値を格納
+					*pOutnIdx = nCntXmodel;
+				}
 
 				EndDevice();
 
-				return E_FAIL;
+				return S_OK;
 			}
+		}
 
-			if (pOutnIdx)
-			{ // 読みこんだモデルの値を格納
-				*pOutnIdx = nCntXmodel;
-			}
+		pModelData = &g_aModelData[0];
 
-			/*** マテリアルデータへのポインタを取得 ***/
-			pMat = (D3DXMATERIAL*)pModelData->pBuffMat->GetBufferPointer();
-
-			for (int nCntMat = 0; nCntMat < (int)pModelData->dwNumMat; nCntMat++)
+		/*** Xファイルの読み込み ***/
+		for (int nCntXmodel = 0; nCntXmodel < MAX_MODELDATA; nCntXmodel++, pModelData++)
+		{
+			if (pModelData->bUse != true)
 			{
-				if (pMat[nCntMat].pTextureFilename != NULL)
+				// 使用済みに
+				pModelData->bUse = true;
+				g_nNumLoadModelData++;
+
+				pMat = NULL;
+
+				// Xファイルの読み込み
+				hr = D3DXLoadMeshFromX(pXFileName,			// 読み込むXファイル名
+					D3DXMESH_SYSTEMMEM,
+					pDevice,								// デバイスポインタ
+					NULL,
+					&pModelData->pBuffMat,	// マテリアルへのポインタ
+					NULL,
+					&pModelData->dwNumMat,	// マテリアルの数
+					&pModelData->pMesh);		// メッシュへのポインタ
+
+				strcpy(&g_aResetFileNameXmodel[nCntXmodel][0], pXFileName);
+
+				if (FAILED(hr))
+				{ // 読み込み失敗時
+					GenerateMessageBox(MB_ICONERROR,
+						"ERROR!",
+						"Xファイルの読み込みに失敗しました!\n対象パス : %s",
+						pXFileName);
+
+					EndDevice();
+
+					return E_FAIL;
+				}
+
+				if (pOutnIdx)
+				{ // 読みこんだモデルの値を格納
+					*pOutnIdx = nCntXmodel;
+				}
+
+				/*** マテリアルデータへのポインタを取得 ***/
+				pMat = (D3DXMATERIAL*)pModelData->pBuffMat->GetBufferPointer();
+
+				for (int nCntMat = 0; nCntMat < (int)pModelData->dwNumMat; nCntMat++)
 				{
-					// 相対パスになっているか確認
-					CheckPath(pMat[nCntMat].pTextureFilename);
+					if (pMat[nCntMat].pTextureFilename != NULL)
+					{
+						// 相対パスになっているか確認
+						CheckPath(pMat[nCntMat].pTextureFilename);
 
-					/*** テクスチャの読み込み ***/
-					hr = D3DXCreateTextureFromFile(pDevice,
-						pMat[nCntMat].pTextureFilename,
-						&pModelData->apTexture[nCntMat]);
+						/*** テクスチャの読み込み ***/
+						hr = D3DXCreateTextureFromFile(pDevice,
+							pMat[nCntMat].pTextureFilename,
+							&pModelData->apTexture[nCntMat]);
 
-					if (FAILED(hr))
-					{ // テクスチャ読み込み失敗時
-						GenerateMessageBox(MB_ICONERROR,
-							"Error (4)",
-							"Xファイルのテクスチャ読み込みに失敗しました。\n対象パス : %s",
-							&pMat[nCntMat].pTextureFilename[0]);
+						if (FAILED(hr))
+						{ // テクスチャ読み込み失敗時
+							GenerateMessageBox(MB_ICONERROR,
+								"Error (4)",
+								"Xファイルのテクスチャ読み込みに失敗しました。\n対象パス : %s",
+								&pMat[nCntMat].pTextureFilename[0]);
+						}
 					}
 				}
+
+				/*** 頂点数を取得 ***/
+				nNumVtx = pModelData->pMesh->GetNumVertices();
+
+				/*** 頂点フォーマットのサイズを取得 ***/
+				dwSizeFVF = D3DXGetFVFVertexSize(pModelData->pMesh->GetFVF());
+
+				/*** 頂点バッファをロック ***/
+				pModelData->pMesh->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
+
+				/*** 頂点の最大、最小値を取得 ***/
+				for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
+				{
+					D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;	// 頂点座標の代入
+
+					/*** 最小値を取得 ***/
+					if (pModelData->mtxMin.x > vtx.x)
+					{
+						pModelData->mtxMin.x = vtx.x;
+					}
+					if (pModelData->mtxMin.y > vtx.y)
+					{
+						pModelData->mtxMin.y = vtx.y;
+					}
+					if (pModelData->mtxMin.z > vtx.z)
+					{
+						pModelData->mtxMin.z = vtx.z;
+					}
+
+					/*** 最大値を取得 ***/
+					if (pModelData->mtxMax.x < vtx.x)
+					{
+						pModelData->mtxMax.x = vtx.x;
+					}
+					if (pModelData->mtxMax.y < vtx.y)
+					{
+						pModelData->mtxMax.y = vtx.y;
+					}
+					if (pModelData->mtxMax.z < vtx.z)
+					{
+						pModelData->mtxMax.z = vtx.z;
+					}
+
+					pVtxBuff += dwSizeFVF;		// 頂点フォーマットのサイズ分ポインタを進める
+				}
+
+				/*** 頂点バッファをアンロック ***/
+				pModelData->pMesh->UnlockVertexBuffer();
+
+				// 情報を参照可能に
+				pModelData->bSafe = true;
+
+				// モデルファイル名を保存
+				ZeroMemory(&pModelData->aXFileName[0], sizeof(char) * MAX_PATH);
+				strcpy(&pModelData->aXFileName[0], pXFileName);
+
+				EndDevice();
+
+				/*** 成功 ***/
+				return S_OK;
 			}
-
-			/*** 頂点数を取得 ***/
-			nNumVtx = pModelData->pMesh->GetNumVertices();
-
-			/*** 頂点フォーマットのサイズを取得 ***/
-			dwSizeFVF = D3DXGetFVFVertexSize(pModelData->pMesh->GetFVF());
-
-			/*** 頂点バッファをロック ***/
-			pModelData->pMesh->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
-
-			/*** 頂点の最大、最小値を取得 ***/
-			for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
-			{
-				D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;	// 頂点座標の代入
-
-				/*** 最小値を取得 ***/
-				if (pModelData->mtxMin.x > vtx.x)
-				{
-					pModelData->mtxMin.x = vtx.x;
-				}
-				if (pModelData->mtxMin.y > vtx.y)
-				{
-					pModelData->mtxMin.y = vtx.y;
-				}
-				if (pModelData->mtxMin.z > vtx.z)
-				{
-					pModelData->mtxMin.z = vtx.z;
-				}
-
-				/*** 最大値を取得 ***/
-				if (pModelData->mtxMax.x < vtx.x)
-				{
-					pModelData->mtxMax.x = vtx.x;
-				}
-				if (pModelData->mtxMax.y < vtx.y)
-				{
-					pModelData->mtxMax.y = vtx.y;
-				}
-				if (pModelData->mtxMax.z < vtx.z)
-				{
-					pModelData->mtxMax.z = vtx.z;
-				}
-
-				pVtxBuff += dwSizeFVF;		// 頂点フォーマットのサイズ分ポインタを進める
-			}
-
-			/*** 頂点バッファをアンロック ***/
-			pModelData->pMesh->UnlockVertexBuffer();
-
-			// 情報を参照可能に
-			pModelData->bSafe = true;
-
-			// モデルファイル名を保存
-			ZeroMemory(&pModelData->aXFileName[0], sizeof(char) * MAX_PATH);
-			strcpy(&pModelData->aXFileName[0], pXFileName);
-
-			EndDevice();
-
-			/*** 成功 ***/
-			return S_OK;
 		}
+
+		EndDevice();
+
+		/*** 上限オーバー ***/
+		return E_FAIL;
 	}
+	else
+	{
+		/*** デバイスの取得 ***/
+		LPDIRECT3DDEVICE9 pDevice = GetDevicePrev();
+		LPMODELDATA pModelData = &g_aModelDataPrev[0];
+		D3DXMATERIAL* pMat = NULL;		// マテリアルへのポインタ
+		HRESULT hr = E_FAIL;			// 読み込み成功判定
+		int nNumVtx = 0;				// 頂点数
+		DWORD dwSizeFVF = 0;			// 頂点フォーマットのサイズ
+		BYTE* pVtxBuff = NULL;			// 頂点バッファへのポインタ
 
-	EndDevice();
+		if (pOutnIdx)
+		{ // 読み込み失敗時の値を格納
+			*pOutnIdx = ERROR_XFILE;
+		}
 
-	/*** 上限オーバー ***/
-	return E_FAIL;
+		/*** 過去に読み込んでいないか確認 ***/
+		for (int nCntXmodel = 0; nCntXmodel < MAX_MODELDATA; nCntXmodel++, pModelData++)
+		{
+			if (strcmp(&pModelData->aXFileName[0], pXFileName) == NULL)
+			{ // 読み込み済みの場合
+				if (pOutnIdx)
+				{ // 読みこみモデルの値を格納
+					*pOutnIdx = nCntXmodel;
+				}
+
+				return S_OK;
+			}
+		}
+
+		pModelData = &g_aModelDataPrev[0];
+
+		/*** Xファイルの読み込み ***/
+		for (int nCntXmodel = 0; nCntXmodel < MAX_MODELDATA; nCntXmodel++, pModelData++)
+		{
+			if (pModelData->bUse != true)
+			{
+				// 使用済みに
+				pModelData->bUse = true;
+				g_nNumLoadModelDataPrev++;
+
+				pMat = NULL;
+
+				// Xファイルの読み込み
+				hr = D3DXLoadMeshFromX(pXFileName,			// 読み込むXファイル名
+					D3DXMESH_SYSTEMMEM,
+					pDevice,								// デバイスポインタ
+					NULL,
+					&pModelData->pBuffMat,	// マテリアルへのポインタ
+					NULL,
+					&pModelData->dwNumMat,	// マテリアルの数
+					&pModelData->pMesh);		// メッシュへのポインタ
+
+				strcpy(&g_aResetFileNameXmodelPrev[nCntXmodel][0], pXFileName);
+
+				if (FAILED(hr))
+				{ // 読み込み失敗時
+					GenerateMessageBox(MB_ICONERROR,
+						"ERROR!",
+						"Xファイルの読み込みに失敗しました!\n対象パス : %s",
+						pXFileName);
+
+					return E_FAIL;
+				}
+
+				if (pOutnIdx)
+				{ // 読みこんだモデルの値を格納
+					*pOutnIdx = nCntXmodel;
+				}
+
+				/*** マテリアルデータへのポインタを取得 ***/
+				pMat = (D3DXMATERIAL*)pModelData->pBuffMat->GetBufferPointer();
+
+				for (int nCntMat = 0; nCntMat < (int)pModelData->dwNumMat; nCntMat++)
+				{
+					if (pMat[nCntMat].pTextureFilename != NULL)
+					{
+						// 相対パスになっているか確認
+						CheckPath(pMat[nCntMat].pTextureFilename);
+
+						/*** テクスチャの読み込み ***/
+						hr = D3DXCreateTextureFromFile(pDevice,
+							pMat[nCntMat].pTextureFilename,
+							&pModelData->apTexture[nCntMat]);
+
+						if (FAILED(hr))
+						{ // テクスチャ読み込み失敗時
+							GenerateMessageBox(MB_ICONERROR,
+								"Error (4)",
+								"Xファイルのテクスチャ読み込みに失敗しました。\n対象パス : %s",
+								&pMat[nCntMat].pTextureFilename[0]);
+						}
+					}
+				}
+
+				/*** 頂点数を取得 ***/
+				nNumVtx = pModelData->pMesh->GetNumVertices();
+
+				/*** 頂点フォーマットのサイズを取得 ***/
+				dwSizeFVF = D3DXGetFVFVertexSize(pModelData->pMesh->GetFVF());
+
+				/*** 頂点バッファをロック ***/
+				pModelData->pMesh->LockVertexBuffer(D3DLOCK_READONLY, (void**)&pVtxBuff);
+
+				/*** 頂点の最大、最小値を取得 ***/
+				for (int nCntVtx = 0; nCntVtx < nNumVtx; nCntVtx++)
+				{
+					D3DXVECTOR3 vtx = *(D3DXVECTOR3*)pVtxBuff;	// 頂点座標の代入
+
+					/*** 最小値を取得 ***/
+					if (pModelData->mtxMin.x > vtx.x)
+					{
+						pModelData->mtxMin.x = vtx.x;
+					}
+					if (pModelData->mtxMin.y > vtx.y)
+					{
+						pModelData->mtxMin.y = vtx.y;
+					}
+					if (pModelData->mtxMin.z > vtx.z)
+					{
+						pModelData->mtxMin.z = vtx.z;
+					}
+
+					/*** 最大値を取得 ***/
+					if (pModelData->mtxMax.x < vtx.x)
+					{
+						pModelData->mtxMax.x = vtx.x;
+					}
+					if (pModelData->mtxMax.y < vtx.y)
+					{
+						pModelData->mtxMax.y = vtx.y;
+					}
+					if (pModelData->mtxMax.z < vtx.z)
+					{
+						pModelData->mtxMax.z = vtx.z;
+					}
+
+					pVtxBuff += dwSizeFVF;		// 頂点フォーマットのサイズ分ポインタを進める
+				}
+
+				/*** 頂点バッファをアンロック ***/
+				pModelData->pMesh->UnlockVertexBuffer();
+
+				// 情報を参照可能に
+				pModelData->bSafe = true;
+
+				// モデルファイル名を保存
+				ZeroMemory(&pModelData->aXFileName[0], sizeof(char) * MAX_PATH);
+				strcpy(&pModelData->aXFileName[0], pXFileName);
+
+				/*** 成功 ***/
+				return S_OK;
+			}
+		}
+
+		/*** 上限オーバー ***/
+		return E_FAIL;
+	}
 }
 
 //================================================================================================================
 // --- Xファイル表示の終了 ---
 //================================================================================================================
-void UninitModelData(void)
+void UninitModelData(int nThreadNum)
 {
 	LPMODELDATA pModelData = &g_aModelData[0];
+	if (nThreadNum == 1)
+	{
+		pModelData = &g_aModelDataPrev[0];
+	}
 
 	for (int nCntObject = 0; nCntObject < MAX_MODELDATA; nCntObject++, pModelData++)
 	{
@@ -234,21 +416,42 @@ void UninitModelData(void)
 //================================================================================================================
 // --- Xファイル表示のリセット ---
 //================================================================================================================
-void ResetModelData(bool bLost)
+void ResetModelData(bool bLost, int nThreadNum)
 {
-	if (bLost)
+	if (nThreadNum == 0)
 	{
-		UninitModelData();
+		if (bLost)
+		{
+			UninitModelData();
 
-		// モデルデータの初期化
-		ZeroMemory(&g_aModelData[0], sizeof(MODELDATA) * (MAX_MODELDATA));
+			// モデルデータの初期化
+			ZeroMemory(&g_aModelData[0], sizeof(MODELDATA) * (MAX_MODELDATA));
+		}
+		else
+		{
+			// モデルデータの再読み込み
+			for (int nCntObject = 0; nCntObject < g_nNumLoadModelData; nCntObject++)
+			{
+				LoadModelData(g_aResetFileNameXmodel[nCntObject], NULL);
+			}
+		}
 	}
 	else
 	{
-		// モデルデータの再読み込み
-		for (int nCntObject = 0; nCntObject < g_nNumLoadModelData; nCntObject++)
+		if (bLost)
 		{
-			LoadModelData(g_aResetFileNameXmodel[nCntObject], NULL);
+			UninitModelData(1);
+
+			// モデルデータの初期化
+			ZeroMemory(&g_aModelDataPrev[0], sizeof(MODELDATA) * (MAX_MODELDATA));
+		}
+		else
+		{
+			// モデルデータの再読み込み
+			for (int nCntObject = 0; nCntObject < g_nNumLoadModelData; nCntObject++)
+			{
+				LoadModelData(g_aResetFileNameXmodelPrev[nCntObject], NULL, nThreadNum);
+			}
 		}
 	}
 }
@@ -256,15 +459,32 @@ void ResetModelData(bool bLost)
 //================================================================================================================
 // --- オブジェクト情報の取得 ---
 //================================================================================================================
-LPMODELDATA GetModelData(_In_ int nType)
+LPMODELDATA GetModelData(int nType, int nThreadNum)
 {
-	LPMODELDATA pModelData = &g_aModelData[nType];
-	if (pModelData->bSafe == true)
+	if (nThreadNum == 0)
 	{
-		return pModelData;
+		LPMODELDATA pModelData = &g_aModelData[nType];
+		if (pModelData->bSafe == true)
+		{
+			return pModelData;
+		}
+		else
+		{
+			return NULL;
+		}
 	}
 	else
 	{
-		return NULL;
+		LPMODELDATA pModelData = &g_aModelDataPrev[nType];
+		if (pModelData->bSafe == true)
+		{
+			return pModelData;
+		}
+		else
+		{
+			return NULL;
+		}
 	}
+
+	return NULL;
 }
