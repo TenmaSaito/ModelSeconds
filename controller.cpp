@@ -34,8 +34,10 @@ using namespace MyMathUtil;
  ControlType g_ControlType;			// コントローラーの状態
  int g_nSelectNum;					// 選択中のモデルの番号
  D3DXVECTOR3 SetPos;				// 設置位置
+ D3DXVECTOR3 SetRot;				// 設置角度
  float g_fSpdPOSR;					//注視点移動速度
  bool bTarget;						//RSHIFTによる対象への視点移動
+ bool g_bPosRot;					//TRUE POS / FALSE ROT
 
 //=================================================================================================
 // --- コントローラー初期化 ---
@@ -46,8 +48,10 @@ void InitController(void)
 	g_pSelectModel = Get3DModel(g_nSelectNum);
 	g_pSelectModel->bAlpha = true;
 	SetPos = VECNULL;
+	SetRot = VECNULL;
 	g_fSpdPOSR = SETPOS_SPD;
 	bTarget = false;
+	g_bPosRot = true;
 }
 //=================================================================================================
 // --- コントローラー終了 ---
@@ -252,49 +256,56 @@ void UpdateController(void)
 		}
 		else if (g_ControlType == CONTROLTYPE_SET)
 		{// -- モデルセット -- //
-			if (GetKeyboardPress(DIK_RIGHT))
-			{//右
-				if (GetKeyboardPress(DIK_LSHIFT))
-				{//LSHIFTで上
-					SetPos.y += MOVE_POS;
+			if (g_bPosRot == true)
+			{
+				if (GetKeyboardPress(DIK_RIGHT))
+				{//右
+					if (GetKeyboardPress(DIK_LSHIFT))
+					{//LSHIFTで上
+						SetPos.y += MOVE_POS;
+					}
+					else
+					{
+						SetPos.x += MOVE_POS;
+					}
 				}
-				else
-				{
-					SetPos.x += MOVE_POS;
+				if (GetKeyboardPress(DIK_LEFT))
+				{//左
+					if (GetKeyboardPress(DIK_LSHIFT))
+					{//LSHIFTで下
+						SetPos.y -= MOVE_POS;
+					}
+					else
+					{
+						SetPos.x -= MOVE_POS;
+					}
+				}
+				if (GetKeyboardPress(DIK_UP))
+				{//奥
+					if (GetKeyboardPress(DIK_LSHIFT))
+					{//LSHIFTで上
+						SetPos.y += MOVE_POS;
+					}
+					else
+					{
+						SetPos.z += MOVE_POS;
+					}
+				}
+				if (GetKeyboardPress(DIK_DOWN))
+				{//手前
+					if (GetKeyboardPress(DIK_LSHIFT))
+					{//LSHIFTで下
+						SetPos.y -= MOVE_POS;
+					}
+					else
+					{
+						SetPos.z -= MOVE_POS;
+					}
 				}
 			}
-			if (GetKeyboardPress(DIK_LEFT))
-			{//左
-				if (GetKeyboardPress(DIK_LSHIFT))
-				{//LSHIFTで下
-					SetPos.y -= MOVE_POS;
-				}
-				else
-				{
-					SetPos.x -= MOVE_POS;
-				}
-			}
-			if (GetKeyboardPress(DIK_UP))
-			{//奥
-				if (GetKeyboardPress(DIK_LSHIFT))
-				{//LSHIFTで上
-					SetPos.y += MOVE_POS;
-				}
-				else
-				{
-					SetPos.z += MOVE_POS;
-				}
-			}
-			if (GetKeyboardPress(DIK_DOWN))
-			{//手前
-				if (GetKeyboardPress(DIK_LSHIFT))
-				{//LSHIFTで下
-					SetPos.y -= MOVE_POS;
-				}
-				else
-				{
-					SetPos.z -= MOVE_POS;
-				}
+			else if (g_bPosRot == false)
+			{
+
 			}
 		}
 	}
