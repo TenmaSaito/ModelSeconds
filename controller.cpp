@@ -14,6 +14,7 @@
 #include "debugproc.h"
 #include "mathUtil.h"
 #include "camera.h"
+#include "save.h"
 
 using namespace MyMathUtil;
 
@@ -23,6 +24,8 @@ using namespace MyMathUtil;
 #define MOVE_POS	(1.0f)		//入力一回のPOS移動量
 #define MOVE_ROT	(0.1f)		//入力一回のROT変更量
 #define SETPOS_SPD	(2.0f)			// カメラの移動速度
+#define TAGESPEED	(0.02f)			// タゲへの移動速度割合
+#define TAGE_HEIGHT	(200.0f)		//　タゲ位置の高さ追加分
 
 //*************************************************************************************************
 //*** グローバル変数 ***
@@ -32,6 +35,7 @@ using namespace MyMathUtil;
  int g_nSelectNum;					// 選択中のモデルの番号
  D3DXVECTOR3 SetPos;				// 設置位置
  float g_fSpdPOSR;					//注視点移動速度
+ bool bTarget;						//RSHIFTによる対象への視点移動
 
 //=================================================================================================
 // --- コントローラー初期化 ---
@@ -43,6 +47,7 @@ void InitController(void)
 	g_pSelectModel->bAlpha = true;
 	SetPos = VECNULL;
 	g_fSpdPOSR = SETPOS_SPD;
+	bTarget = false;
 }
 //=================================================================================================
 // --- コントローラー終了 ---
@@ -57,7 +62,6 @@ void UninitController(void)
 void UpdateController(void)
 {
 	Camera* pCamera = GetCamera(0);
-	pCamera->posR = SetPos;
 
 	//================================
 	// -- 画面表示 --
@@ -97,12 +101,14 @@ void UpdateController(void)
 	{//モデル角度変更
 		g_ControlType = CONTROLTYPE_ROT;
 	}
+	else if (GetKeyboardTrigger(DIK_4))
+	{
+		g_ControlType = CONTROLTYPE_SET;
+	}
 
 	//================================
 	// -- コントロール --
 	//================================
-	MovePosR();
-
 	if (g_ControlType == CONTROLTYPE_SELECT)
 	{//モデル選択//
 		if (GetKeyboardTrigger(DIK_RIGHT))
@@ -244,6 +250,80 @@ void UpdateController(void)
 				g_pSelectModel->rot.y -= MOVE_ROT;
 			}
 		}
+		else if (g_ControlType == CONTROLTYPE_SET)
+		{// -- モデルセット -- //
+			if (GetKeyboardPress(DIK_RIGHT))
+			{//右
+				if (GetKeyboardPress(DIK_LSHIFT))
+				{//LSHIFTで上
+					SetPos.y += MOVE_POS;
+				}
+				else
+				{
+					SetPos.x += MOVE_POS;
+				}
+			}
+			if (GetKeyboardPress(DIK_LEFT))
+			{//左
+				if (GetKeyboardPress(DIK_LSHIFT))
+				{//LSHIFTで下
+					SetPos.y -= MOVE_POS;
+				}
+				else
+				{
+					SetPos.x -= MOVE_POS;
+				}
+			}
+			if (GetKeyboardPress(DIK_UP))
+			{//奥
+				if (GetKeyboardPress(DIK_LSHIFT))
+				{//LSHIFTで上
+					SetPos.y += MOVE_POS;
+				}
+				else
+				{
+					SetPos.z += MOVE_POS;
+				}
+			}
+			if (GetKeyboardPress(DIK_DOWN))
+			{//手前
+				if (GetKeyboardPress(DIK_LSHIFT))
+				{//LSHIFTで下
+					SetPos.y -= MOVE_POS;
+				}
+				else
+				{
+					SetPos.z -= MOVE_POS;
+				}
+			}
+		}
+	}
+
+	//=================================
+	//	     -- 常設コマンド --
+	// ================================
+	if (GetKeyboardTrigger(DIK_DELETE))
+	{
+		DeleteModel(Get3DModel(0), GetNum3DModel(), g_nSelectNum);
+		if (g_nSelectNum > GetNum3DModel())
+		{
+			g_nSelectNum = GetNum3DModel();
+			g_pSelectModel = Get3DModel(g_nSelectNum);
+		}
+		g_pSelectModel->bAlpha = true;
+	}
+
+	//選択中のモデルの位置へ移動
+	if (GetKeyboardTrigger(DIK_RSHIFT))
+	{
+		bTarget ^= true;
+	}
+
+	if (bTarget == true)
+	{
+		pCamera->posR.x += (g_pSelectModel->pos.x - pCamera->posR.x) * TAGESPEED;
+		pCamera->posR.y += (g_pSelectModel->pos.y + 200.0f - pCamera->posR.y) * TAGESPEED;
+		pCamera->posR.z += (g_pSelectModel->pos.z - pCamera->posR.z) * TAGESPEED;
 	}
 }
 //=================================================================================================
@@ -318,85 +398,4 @@ void SearchUseModel(bool bInDe)
 			}
 		}
 	}
-}
-//=================================================================================================
-// --- 注視点移動 ---
-//=================================================================================================
-void MovePosR(void)
-{
-	Camera* pCamera = GetCamera(0);
-	
-	if (GetKeyboardPress(DIK_W))
-	{ // Wを押したとき
-		/** 追加入力 **/
-		if (GetKeyboardPress(DIK_A))
-		{// Aを押したとき
-			SetPos.x += cosf(pCamera->rot.y + (D3DX_PI * 1.25f)) * g_fSpdPOSR;
-			SetPos.z += sinf(pCamera->rot.y + (D3DX_PI * 1.25f)) * g_fSpdPOSR;
-		}
-		else if (GetKeyboardPress(DIK_D))
-		{ // Dを押したとき
-			SetPos.x += cosf(pCamera->rot.y + (D3DX_PI * 0.75f)) * g_fSpdPOSR;
-			SetPos.z += sinf(pCamera->rot.y + (D3DX_PI * 0.75f)) * g_fSpdPOSR;
-		}
-		else
-		{ // 純粋なW入力時
-			SetPos.x += cosf(pCamera->rot.y + D3DX_PI) * g_fSpdPOSR;
-			SetPos.z += sinf(pCamera->rot.y + D3DX_PI) * g_fSpdPOSR;
-		}
-	}
-	else if (GetKeyboardPress(DIK_S))
-	{ // Sを押したとき
-		/** 追加入力 **/
-		if (GetKeyboardPress(DIK_A))
-		{// Aを押したとき
-			pCamera->posR.x += cosf(pCamera->rot.y + (D3DX_PI * 1.75f)) * g_fSpdPOSR;
-			pCamera->posR.z += sinf(pCamera->rot.y + (D3DX_PI * 1.75f)) * g_fSpdPOSR;
-
-		}
-		else if (GetKeyboardPress(DIK_D))
-		{ // Dを押したとき
-			
-			pCamera->posR.x += cosf(pCamera->rot.y + (D3DX_PI * 0.25f)) * g_fSpdPOSR;
-			pCamera->posR.z += sinf(pCamera->rot.y + (D3DX_PI * 0.25f)) * g_fSpdPOSR;
-		}
-		else
-		{ // 純粋なS入力時
-			pCamera->posR.x += cosf(pCamera->rot.y) * g_fSpdPOSR;
-			pCamera->posR.z += sinf(pCamera->rot.y) * g_fSpdPOSR;
-		}
-	}
-	else if (GetKeyboardPress(DIK_A))
-	{ // Aを押したとき
-		pCamera->posR.x += cosf(pCamera->rot.y + (D3DX_PI * 1.5f)) * g_fSpdPOSR;
-		pCamera->posR.z += sinf(pCamera->rot.y + (D3DX_PI * 1.5f)) * g_fSpdPOSR;
-	}
-	else if (GetKeyboardPress(DIK_D))
-	{ // Dを押したとき
-		pCamera->posR.x += cosf(pCamera->rot.y + (D3DX_PI * 0.5f)) * g_fSpdPOSR;
-		pCamera->posR.z += sinf(pCamera->rot.y + (D3DX_PI * 0.5f)) * g_fSpdPOSR;
-	}
-
-	/*** カメラの移動！(上下) ***/
-	if (GetKeyboardPress(DIK_LCONTROL))
-	{
-		pCamera->posV.y -= g_fSpdPOSR;
-		pCamera->posR.y -= g_fSpdPOSR;
-	}
-	else if (GetKeyboardPress(DIK_SPACE))
-	{
-		pCamera->posV.y += g_fSpdPOSR;
-		pCamera->posR.y += g_fSpdPOSR;
-	}
-
-	if (GetKeyboardTrigger(DIK_LSHIFT))
-	{
-		g_fSpdPOSR *= 2.0f;
-	}
-	else if (GetKeyboardRelease(DIK_LSHIFT))
-	{
-		g_fSpdPOSR *= 0.5f;
-	}
-
-	pCamera->posR = SetPos;
 }

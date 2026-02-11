@@ -56,7 +56,7 @@ void UpdateCamera(int nIdxCamera)
 {
 	Camera *pCamera = &g_aCamera[nIdxCamera];
 
-#if 0
+#if 1
 	/*** 視点の平行移動！ ***/
 	if (GetKeyboardPress(DIK_W))
 	{ // Wを押したとき
@@ -209,6 +209,10 @@ void SetCamera(int nIdxCamera)
 
 	/*** デバイスの取得 ***/
 	LPDIRECT3DDEVICE9 pDevice = GetDevice();
+	if (nIdxCamera == 1)
+	{
+		pDevice = GetDevicePrev();
+	}
 
 	// ビューポート設定
 	pDevice->SetViewport(&pCamera->viewport);
@@ -302,5 +306,5 @@ Camera *GetCamera(int nIdxCamera)
 //================================================================================================================
 int GetCameraNum(void)
 {
-	return g_nNumCamera;
+	return 1;
 }

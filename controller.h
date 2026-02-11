@@ -37,5 +37,4 @@ void UpdateController(void);
 void DrawController(void);
 
 void SearchUseModel(bool bInDe);
-void MovePosR(void);
 #endif

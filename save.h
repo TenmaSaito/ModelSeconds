@@ -21,5 +21,6 @@
 // プロトタイプ宣言
 //*****************************************************************************
 void SaveModelFile(const char* pSaveFileName);
+void DeleteModel(_3DMODEL* p3DModel, int nNumModel, int nIdx);
 
 #endif // !_SAVE_H_
