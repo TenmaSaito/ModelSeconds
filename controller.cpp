@@ -15,6 +15,7 @@
 #include "mathUtil.h"
 #include "camera.h"
 #include "save.h"
+#include "prevModel.h"
 
 using namespace MyMathUtil;
 
@@ -260,10 +261,27 @@ void UpdateController(void)
 	else if (g_ControlType == CONTROLTYPE_SET)
 	{// -- モデルセット -- //
 		P3DMODEL pLast = GetLast3DModel();
-		if (GetKeyboardPress(DIK_RSHIFT))
+		if (GetKeyboardTrigger(DIK_RSHIFT))
 		{
 			g_bPosRot ^= true;
 			pLast->bAlpha ^= true;
+		}
+
+		if (GetKeyboardTrigger(DIK_P))
+		{
+			pLast->nIdx3Dmodel++;
+			if (pLast->nIdx3Dmodel > GetNumModelIdx() - 1)
+			{
+				pLast->nIdx3Dmodel = 0;
+			}
+		}
+		else if (GetKeyboardTrigger(DIK_O))
+		{
+			pLast->nIdx3Dmodel--;
+			if (pLast->nIdx3Dmodel < 0)
+			{
+				pLast->nIdx3Dmodel = GetNumModelIdx() - 1;
+			}
 		}
 
 		if (g_bPosRot == true)
@@ -362,8 +380,13 @@ void UpdateController(void)
 		}
 		pLast->pos = SetPos;
 		pLast->rot = SetRot;
+		SetPrevModel(pLast->nIdx3Dmodel);
+
+		if (GetKeyboardPress(DIK_TAB))
+		{
+			Set3DModel(SetPos, SetRot,pLast->nIdx3Dmodel);
+		}
 	}
-	
 
 	//=================================
 	//	     -- 常設コマンド --

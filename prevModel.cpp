@@ -119,7 +119,6 @@ void SetPrevModel(int nIdxModelData)
 	int nCntPrevModel;
 	
 	pPrevModel->pos = VECNULL;
-	pPrevModel->rot = VECNULL;
 	pPrevModel->nIdx3Dmodel = nIdxModelData;
 	pPrevModel->bUse = true;
 

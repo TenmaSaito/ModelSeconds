@@ -47,4 +47,5 @@ void ResetModelData(bool bLost, int nThreadNum = 0);
 
 HRESULT LoadModelData(const char* pXFileName, int *pOutnIdx, int nThreadNum = 0);
 LPMODELDATA GetModelData(int nType, int nThreadNum = 0);
+int GetNumModelIdx(void);
 #endif
