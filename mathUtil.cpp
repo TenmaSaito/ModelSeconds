@@ -1285,6 +1285,65 @@ void MyMathUtil::Draw3DModelFromXFile(_In_ LPDIRECT3DDEVICE9 pDevice,
 }
 
 //==================================================================================
+// --- 色変更後のモデル描画 ---
+//==================================================================================
+void MyMathUtil::Draw3DModelByCustomColorFromXFile(_In_ LPDIRECT3DDEVICE9 pDevice,
+	_In_ const D3DXMATERIAL* pMat,
+	_In_ DWORD dwNumMat,
+	_In_ LPDIRECT3DTEXTURE9* ppTexture,
+	_In_ LPD3DXMESH pMesh,
+	_In_ const D3DXMATRIX* pMtxWorld,
+	_In_ D3DCOLORVALUE CustomColor)
+{
+	// NULLCHECK
+	if (pDevice == nullptr)
+	{
+		OutputDebugString(TEXT("pDeviceが設定されていません！"));
+		return;
+	}
+
+	// NULLCHECK
+	if (pMat == nullptr)
+	{
+		OutputDebugString(TEXT("pMatがないよ！"));
+		return;
+	}
+
+	// NULLCHECK
+	if (ppTexture == nullptr)
+	{
+		OutputDebugString(TEXT("ppTextureが...ぐっ！"));
+		return;
+	}
+
+	// NULLCHECK
+	if (pMesh == nullptr)
+	{
+		OutputDebugString(TEXT("pMeshが...無い。"));
+		return;
+	}
+
+	/*** ワールドマトリックスの設定 ***/
+	pDevice->SetTransform(D3DTS_WORLD, pMtxWorld);
+
+	for (int nCntMat = 0; nCntMat < (int)dwNumMat; nCntMat++)
+	{
+		D3DMATERIAL9 customMat = pMat[nCntMat].MatD3D;
+
+		customMat.Diffuse = CustomColor;
+
+		/*** マテリアルの設定 ***/
+		pDevice->SetMaterial(&customMat);
+
+		/*** テクスチャの設定 ***/
+		pDevice->SetTexture(0, ppTexture[nCntMat]);
+
+		/*** モデル(パーツ)の描画 ***/
+		pMesh->DrawSubset(nCntMat);
+	}
+}
+
+//==================================================================================
 // --- モデル描画(ModelData使用) ---
 //==================================================================================
 #ifdef MODELDATA_INCLUDED
@@ -1341,6 +1400,60 @@ void MyMathUtil::Draw3DModelFromModelData(_In_ LPDIRECT3DDEVICE9 pDevice,
 
 		/*** マテリアルの設定 ***/
 		pDevice->SetMaterial(&shadowMat);
+
+		/*** テクスチャの設定 ***/
+		pDevice->SetTexture(0, pModelData->apTexture[nCntMat]);
+
+		/*** モデル(パーツ)の描画 ***/
+		pModelData->pMesh->DrawSubset(nCntMat);
+	}
+
+	/*** 保存していたマテリアルを戻す！ ***/
+	pDevice->SetMaterial(&matDef);
+}
+
+//==================================================================================
+// --- 色変更後のモデル描画(ModelData使用) ---
+//==================================================================================
+void MyMathUtil::Draw3DModelByCustomColorFromModelData(_In_ LPDIRECT3DDEVICE9 pDevice,
+	_In_ const MODELDATA* pModelData,
+	_In_ const D3DXMATRIX* pMtxWorld,
+	_In_ D3DCOLORVALUE CustomColor)
+{
+	// NULLCHECK
+	if (pDevice == nullptr)
+	{
+		OutputDebugString(TEXT("pDeviceが設定されていません！"));
+		return;
+	}
+
+	// NULLCHECK
+	if (pModelData == nullptr)
+	{
+		OutputDebugString(TEXT("pModelDataがnullだよ～"));
+		return;
+	}
+
+	/*** ワールドマトリックスの設定 ***/
+	pDevice->SetTransform(D3DTS_WORLD, pMtxWorld);
+
+	D3DMATERIAL9 matDef;				// 現在のマテリアル保存用
+	D3DXMATERIAL* pMat;					// マテリアルデータへのポインタ
+
+	/*** 現在のマテリアルを保存 ***/
+	pDevice->GetMaterial(&matDef);
+
+	/*** マテリアルデータへのポインタを取得 ***/
+	pMat = (D3DXMATERIAL*)pModelData->pBuffMat->GetBufferPointer();
+
+	for (int nCntMat = 0; nCntMat < (int)pModelData->dwNumMat; nCntMat++)
+	{
+		D3DMATERIAL9 customMat = pMat[nCntMat].MatD3D;
+
+		customMat.Diffuse = CustomColor;
+
+		/*** マテリアルの設定 ***/
+		pDevice->SetMaterial(&customMat);
 
 		/*** テクスチャの設定 ***/
 		pDevice->SetTexture(0, pModelData->apTexture[nCntMat]);

@@ -179,11 +179,24 @@ namespace MyMathUtil
 		_In_ const D3DXMATRIX *pMtxWorld,
 		_In_opt_ const D3DXMATRIX *pMtxShadow = NULL);
 
+	void Draw3DModelByCustomColorFromXFile(_In_ LPDIRECT3DDEVICE9 pDevice,
+		_In_ const D3DXMATERIAL* pMat,
+		_In_ DWORD dwNumMat,
+		_In_ LPDIRECT3DTEXTURE9* ppTexture,
+		_In_ LPD3DXMESH pMesh,
+		_In_ const D3DXMATRIX* pMtxWorld,
+		_In_ D3DCOLORVALUE CustomColor);
+
 #ifdef MODELDATA_INCLUDED
 	void Draw3DModelFromModelData(_In_ LPDIRECT3DDEVICE9 pDevice,
 		_In_ const MODELDATA *pModelData,
 		_In_ const D3DXMATRIX *pMtxWorld,
 		_In_opt_ const D3DXMATRIX *pMtxShadow = NULL);
+
+	void Draw3DModelByCustomColorFromModelData(_In_ LPDIRECT3DDEVICE9 pDevice,
+		_In_ const MODELDATA* pModelData,
+		_In_ const D3DXMATRIX* pMtxWorld,
+		_In_ D3DCOLORVALUE CustomColor);
 #endif
 #pragma pop_macro("NULL")
 

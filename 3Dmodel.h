@@ -26,6 +26,7 @@ typedef struct _3DMODEL
 	D3DXMATRIX mtxWorld;	// ワールドマトリックス
 	int nIdx3Dmodel;		// モデルデータのインデックス
 	bool bUse;				// 格納状況
+	bool bAlpha;			// 半透明
 } _3DMODEL;
 
 typedef struct _3DMODEL *P3DMODEL, *LP3DMODEL;
