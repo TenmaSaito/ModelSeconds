@@ -17,6 +17,7 @@
 // MODE
 #include "mode.h"
 #include "edit.h"
+#include "save.h"
 
 //**********************************************************************************
 //*** マクロ定義 ***
@@ -70,6 +71,7 @@ bool g_isFullscreen = false;							// フルスクリーンの使用状況
 RECT g_windowRect;										// ウィンドウサイズ
 bool g_bMainThread;										// メインスレッドの実行状況
 MultiData g_mdDirect3DDevice;							// スレッドセーフ
+TCHAR g_szFileTitle[MAX_PATH] = "ModelSeconds";			// ファイルの名前
 
 // デバイスリセット関連
 bool g_bDeviceLost;										// デバイスの状態
@@ -327,6 +329,34 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case ID_NAMEDSAVE:		// 名前を付けて保存
+			GetWindowText(hWnd, szFileTitle, sizeof(char) * MAX_PATH);
+			ZeroMemory(&oFileName, sizeof(OPENFILENAME));											// 初期化
+			oFileName.lStructSize = sizeof(OPENFILENAME);											// 構造体のサイズ.
+			oFileName.hwndOwner = hWnd;																// オーナーウィンドウ.
+			oFileName.lpstrFilter = TEXT("テキストファイル (*.txt)\0*.txt\0\0");					// フィルタ(指定したパターンのファイルだけ見える.)
+			oFileName.lpstrFile = tszFilePath;														// 入力されたファイルパス.
+			oFileName.Flags = OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;								// 既にファイルがある時, 上書きするかの確認を表示.
+			oFileName.nFilterIndex = 1;																// ファイルフィルター
+			oFileName.nMaxFile = MAX_PATH;															// 上記の文字列のデータの最大数
+			oFileName.lpstrDefExt = TEXT(".txt");													// 拡張子の自動追加
+			oFileName.nMaxFileTitle = 64;															// ファイル名の最大データ数
+			oFileName.lpstrFileTitle = szFileTitle;													// ファイル名
+			oFileName.lpstrTitle = NULL;															// ダイアログボックスの名前
+
+			// ファイル選択.
+			if (!GetSaveFileName(&oFileName))
+			{ // GetSaveFileNameでファイルを選択.
+
+				// 選択しなかった場合(キャンセル)
+				break;
+			}
+
+			// ファイル名を渡して保存
+			SaveModelFile(oFileName.lpstrFile);
+
+			SetWindowText(hWnd, oFileName.lpstrFile);
+			memset(g_szFileTitle, NULL, sizeof(g_szFileTitle));
+			strcpy(g_szFileTitle, oFileName.lpstrFile);
 
 			break;
 

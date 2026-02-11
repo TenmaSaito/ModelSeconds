@@ -8,6 +8,7 @@
 #include "save.h"
 #include "mathUtil.h"
 #include "model.h"
+#include "field.h"
 #include "input.h"
 
 using namespace MyMathUtil;
@@ -36,8 +37,13 @@ void SaveModelFile(const char* pSaveFileName)
 		return;
 	}
 
+	D3DXVECTOR3 rot = VECNULL;										// 向き変換用
+
 	_3DMODEL* p3DModel = Get3DModel(0);								// 設置モデルの先頭アドレス
 	int nNumModel = GetNum3DModel();								// 設置モデルの数
+
+	Field* pField = GetField(0);									// 設置床の先頭アドレス
+	int nNumFIeld = GetNumField();									// 設置床の数
 
 	int nNumModelType = GetNumModel();								// モデル種類数
 	int nNumTexture = GetNumTexture();								// テクスチャ種類数
@@ -107,6 +113,39 @@ void SaveModelFile(const char* pSaveFileName)
 
 	fprintf(pFile, "\n");		// 改行
 
+	// 床数書き出し
+	fprintf(pFile, "#------------------------------------------------------------------------------\n");
+	fprintf(pFile, "# フィールド数\n");
+	fprintf(pFile, "#------------------------------------------------------------------------------\n");
+
+	fprintf(pFile, "NUM_FIELD = %d\n", nNumFIeld);
+
+	fprintf(pFile, "\n");		// 改行
+
+	// 床の配置情報書き出し
+	fprintf(pFile, "#------------------------------------------------------------------------------\n");
+	fprintf(pFile, "# 地面配置情報\n");
+	fprintf(pFile, "#------------------------------------------------------------------------------\n");
+
+	fprintf(pFile, "\n");		// 改行
+
+	// 配置床数分だけ
+	for (int nCntField = 0; nCntField < nNumFIeld; nCntField++, pField++)
+	{
+		rot = RadianToDegree(pField->rot);
+
+		fprintf(pFile, "FIELDSET\n");
+		fprintf(pFile, "\tTEXTYPE = %d\t\t# テクスチャの種類\n", pField->nIndexTexture);
+		fprintf(pFile, "\tPOS = %.1f %.1f %.1f\t# 位置\n", pField->pos.x, pField->pos.y, pField->pos.z);
+		fprintf(pFile, "\tROT = %d %d %d\t\t\t# 向き\n", (int)rot.x, (int)rot.y, (int)rot.z);
+		fprintf(pFile, "\tBLOCK = %d %d\t# 分割数(X / Z)\n", pField->nXBlock, pField->nZBlock);
+		fprintf(pFile, "\tSIZE = %.0f %.0f\t# 大きさ(X / Z)\n", pField->fWidth / pField->nXBlock, pField->fDepth / pField->nZBlock);
+		fprintf(pFile, "END_FIELDSET\n");
+		fprintf(pFile, "\n");
+	}
+
+	fprintf(pFile, "\n");		// 改行
+
 	// モデルの配置情報書き出し
 	fprintf(pFile, "#------------------------------------------------------------------------------\n");
 	fprintf(pFile, "# モデル配置情報\n");
@@ -117,10 +156,12 @@ void SaveModelFile(const char* pSaveFileName)
 	// 配置モデル数分だけ
 	for (int nCntModel = 0; nCntModel < nNumModel; nCntModel++, p3DModel++)
 	{
+		rot = RadianToDegree(p3DModel->rot);
+
 		fprintf(pFile, "MODELSET\n");
 		fprintf(pFile, "\tTYPE = %d\n", p3DModel->nIdx3Dmodel);
 		fprintf(pFile, "\tPOS = %.1f %.1f %.1f\n", p3DModel->pos.x, p3DModel->pos.y, p3DModel->pos.z);
-		fprintf(pFile, "\tROT = %.1f %.1f %.1f\n", p3DModel->rot.x, p3DModel->rot.y, p3DModel->rot.z);
+		fprintf(pFile, "\tROT = %d %d %d\n", (int)rot.x, (int)rot.y, (int)rot.z);
 		fprintf(pFile, "END_MODELSET\n");
 		fprintf(pFile, "\n");
 	}
