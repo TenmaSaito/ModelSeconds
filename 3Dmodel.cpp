@@ -84,16 +84,7 @@ void Draw3DModel(void)
 
 			// モデルデータを取得
 			LPMODELDATA pModelData = GetModelData(p3DModel->nIdx3Dmodel);
-			if (p3DModel->bAlpha == true)
-			{
-				D3DCOLORVALUE diffuse = { 0.0f, 1.0f, 0.0f, 0.5f };
-
-				Draw3DModelByCustomColorFromModelData(pDevice,
-					pModelData,
-					&p3DModel->mtxWorld,
-					diffuse);
-			}
-			else if (nCnt3DModel == MAX_3DMODEL - 1)
+			if (nCnt3DModel == MAX_3DMODEL - 1)
 			{
 				D3DCOLORVALUE diffuse;
 
@@ -105,6 +96,15 @@ void Draw3DModel(void)
 				{
 					diffuse = { 1.0f, 0.0f, 0.0f, 0.5f };
 				}
+
+				Draw3DModelByCustomColorFromModelData(pDevice,
+					pModelData,
+					&p3DModel->mtxWorld,
+					diffuse);
+			}
+			else if (g_aModel[nCnt3DModel].bAlpha == true)
+			{
+				D3DCOLORVALUE diffuse = { 0.0f, 1.0f, 0.0f, 0.5f };
 
 				Draw3DModelByCustomColorFromModelData(pDevice,
 					pModelData,

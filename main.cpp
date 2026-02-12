@@ -27,8 +27,8 @@
 #define SUBCLASS_NAME	"SubWindowClass"			// サブウィンドウクラスの名前
 #define SUBWINDOW_NAME	"プレビュー"				// キャプションに表示される名前
 #define MODE_ON										// モード切り替え
-#define CREATE_DATE		"2026/02/..."				// 制作日
-#define CREATERS_NAME	"TENMA SAITO\n..."			// 制作者名
+#define CREATE_DATE		"2026/02/11"				// 制作日
+#define CREATERS_NAME	"TENMA SAITO\nKEITARO NAGATE\nSYUMA AIZU"			// 制作者名
 #define	MODEL_TXT		"data\\Scripts\\model.txt"	// デフォルトの外部ファイル
 
 //**********************************************************************************
@@ -413,7 +413,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			MyMathUtil::GenerateMessageBox(MB_ICONINFORMATION,
 				"バージョン情報！",
-				"アプリ名 : %s\n制作者 : %s\n制作日 : %s",
+				"アプリ名 : %s\n\n制作者 : \n%s\n\n制作日 : %s",
 				WINDOW_NAME,
 				CREATERS_NAME,
 				CREATE_DATE);

@@ -261,7 +261,7 @@ void UpdateController(void)
 	else if (g_ControlType == CONTROLTYPE_SET)
 	{// -- モデルセット -- //
 		P3DMODEL pLast = GetLast3DModel();
-		if (GetKeyboardTrigger(DIK_RSHIFT))
+		if (GetKeyboardTrigger(DIK_TAB))
 		{
 			g_bPosRot ^= true;
 			pLast->bAlpha ^= true;
@@ -382,7 +382,7 @@ void UpdateController(void)
 		pLast->rot = SetRot;
 		SetPrevModel(pLast->nIdx3Dmodel);
 
-		if (GetKeyboardPress(DIK_TAB))
+		if (GetKeyboardPress(DIK_RETURN))
 		{
 			Set3DModel(SetPos, SetRot,pLast->nIdx3Dmodel);
 		}
