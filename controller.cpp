@@ -382,7 +382,7 @@ void UpdateController(void)
 		pLast->rot = SetRot;
 		SetPrevModel(pLast->nIdx3Dmodel);
 
-		if (GetKeyboardPress(DIK_RETURN))
+		if (GetKeyboardTrigger(DIK_RETURN))
 		{
 			Set3DModel(SetPos, SetRot,pLast->nIdx3Dmodel);
 		}
