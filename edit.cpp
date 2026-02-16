@@ -82,7 +82,7 @@ void InitEdit(int nThreadNum)
 		viewport.X = 0.0f;
 		viewport.Y = 0.0f;
 
-		g_nIdxCamera = AddCamera(VEC_Z(-100.0f), VECNULL, VEC_Z(D3DX_HALFPI), viewport);
+		g_nIdxCamera = Shi::AddCamera(VEC_Z(-100.0f), VECNULL, VEC_Z(D3DX_HALFPI), viewport);
 
 		SetSkybox(SKYBOX_NORMAL);
 	}
@@ -197,7 +197,7 @@ void DrawEdit(int nThreadNum)
 		for (int nCntDraw = 0; nCntDraw < 1; nCntDraw++)
 		{
 			/*** カメラの設置 ***/
-			SetCamera(nCntDraw);
+			Shi::SetCamera(nCntDraw);
 
 			/*** スカイボックスの描画 ***/
 			DrawSkybox();

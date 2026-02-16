@@ -326,6 +326,48 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 
+		// マウス移動
+	case WM_MOUSEMOVE:
+		Shi::UpdateCuurentMousePos(lParam);
+		Shi::TransisionMousePos(hWnd);
+		break;
+
+		// 左クリック
+	case WM_LBUTTONDOWN:
+		SetCapture(hWnd);
+		Shi::AddMouseButtonFlags(BITMASK(MOUSEKEY_LEFT));
+		break;
+
+		// 左クリック解除
+	case WM_LBUTTONUP:
+		ReleaseCapture();
+		Shi::SubMouseButtonFlags(BITMASK(MOUSEKEY_LEFT));
+		break;
+
+		// 右クリック
+	case WM_RBUTTONDOWN:
+		SetCapture(hWnd);
+		Shi::AddMouseButtonFlags(BITMASK(MOUSEKEY_RIGHT));
+		break;
+
+		// 右クリック解除
+	case WM_RBUTTONUP:
+		ReleaseCapture();
+		Shi::SubMouseButtonFlags(BITMASK(MOUSEKEY_RIGHT));
+		break;
+
+		// 中央クリック
+	case WM_MBUTTONDOWN:
+		SetCapture(hWnd);
+		Shi::AddMouseButtonFlags(BITMASK(MOUSEKEY_WHEEL));
+		break;
+
+		// 中央クリック解除
+	case WM_MBUTTONUP:
+		ReleaseCapture();
+		Shi::SubMouseButtonFlags(BITMASK(MOUSEKEY_WHEEL));
+		break;
+
 	case WM_COMMAND: //コントロールの操作
 		switch (LOWORD(wParam))
 		{
@@ -735,6 +777,7 @@ void Update(void)
 
 	// マウスの更新処理
 	UpdateMouse();
+	Shi::UpdateMouseState();
 
 	// デバッグ表示更新
 	UpdateDebugProc();

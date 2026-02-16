@@ -33,6 +33,37 @@ typedef struct
 	bool bUse;					// 使われているか
 } Camera;
 
+//*****************************************************************************
+// 追加のカメラの構造体定義
+//*****************************************************************************
+namespace Shi
+{
+	//*****************************************************************************
+	// カメラの構造体定義
+	//*****************************************************************************
+	typedef struct
+	{
+		D3DXVECTOR3 posV;				// 視点
+		D3DXVECTOR3 posR;				// 注視点
+		D3DXVECTOR3 posU;				// 上方向ベクトル
+		D3DXVECTOR3 posVDest;			// 目的の視点
+		D3DXVECTOR3 posRDest;			// 目的の注視点
+		D3DXVECTOR3 move;				// 移動量
+		D3DXVECTOR3 rot;				// 向き
+		D3DXVECTOR3 rotDest;			// 目的の向き
+		D3DXVECTOR3 rotOld;				// 過去の向き
+		float fRadiusVertical;			// 縦軸距離(基本)
+		float fRadiusHorizonttal;		// 横軸距離
+		D3DXMATRIX mtxProjection;		// プロジェクションマトリックス
+		D3DXMATRIX mtxView;				// ビューマトリックス
+		D3DVIEWPORT9 viewport;			// ビューポート
+		bool bUse;						// 使用状態
+	}Camera;
+
+	int AddCamera(D3DXVECTOR3 posV, D3DXVECTOR3 posR, D3DXVECTOR3 rot, D3DVIEWPORT9 viewport);
+	void SetCamera(int nIdxCamera);
+}
+
 //**********************************************************************************
 //*** プロトタイプ宣言 ***
 //**********************************************************************************

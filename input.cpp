@@ -10,6 +10,8 @@
 #include "input.h"
 #include "mathUtil.h"
 
+#include <windowsx.h>
+
 using namespace MyMathUtil;
 
 //**********************************************************************************
@@ -58,6 +60,8 @@ LONG g_alMouseMoveExacLast[MOUSESLOPE_MAX];		// 過去のマウスのホイールの回転量
 LONG g_alMouseMoveCurrent[MOUSESLOPE_MAX];		// 現在のマウスホイールの回転量
 
 HWND g_InputhWnd = NULL;						// 座標変換に使用するウィンドウのハンドル
+
+Shi::MouseState g_MouseState = {};				// マウスの入力情報(追加)
 
 //================================================================================================================
 //キーボードの初期化処理
@@ -1321,4 +1325,119 @@ POINT GetMousePos(void)
 LONG GetMouseMove(MOUSESLOPE slope) 
 {
 	return (float)g_alMouseMoveCurrent[slope];
+}
+
+
+//================================================================================================================
+// マウスの位置情報を取得
+//================================================================================================================
+void Shi::UpdateMouseState(void)
+{
+	// 差分をとる
+	g_MouseState.MouseMove.x = g_MouseState.CurrentMousePos.x - g_MouseState.PrevMousePos.x;
+	g_MouseState.MouseMove.y = g_MouseState.CurrentMousePos.y - g_MouseState.PrevMousePos.y;
+
+	// 過去の情報を更新
+	g_MouseState.PrevMousePos = g_MouseState.CurrentMousePos;
+	g_MouseState.nOutWheel = g_MouseState.nInWheel;
+
+	// 初期化
+	g_MouseState.nInWheel = 0;
+}
+
+//================================================================================================================
+// マウスの位置情報を取得
+//================================================================================================================
+void Shi::UpdateCuurentMousePos(LPARAM lParam)
+{
+	g_MouseState.CurrentMousePos.x = GET_X_LPARAM(lParam);
+	g_MouseState.CurrentMousePos.y = GET_Y_LPARAM(lParam);
+}
+
+//================================================================================================================
+// マウスの位置制限
+//================================================================================================================
+void Shi::TransisionMousePos(HWND hWnd)
+{
+	if (!g_MouseState.ButtonFlags & (BITMASK(MOUSEKEY_LEFT) | BITMASK(MOUSEKEY_RIGHT) | BITMASK(MOUSEKEY_WHEEL)))
+	{// 操作中じゃなければ
+		return;
+	}
+
+	POINT MousePos = {};				// スクリーン上の位置
+	RECT rect = {};						// ウィンドウのサイズ
+	bool isTransisiton = false;			// 端についてたか
+
+	// ウィンドウのサイズを受け取る
+	rect.right = GetSystemMetrics(SM_CXSCREEN);
+	rect.bottom = GetSystemMetrics(SM_CYSCREEN);
+
+	GetCursorPos(&MousePos);			// 今の位置を受け取る
+
+	if (MousePos.x <= 0)
+	{// もし左端を超えていたら
+		MousePos.x = rect.right - 2;
+		isTransisiton = true;
+	}
+
+	if (MousePos.x > rect.right - 2)
+	{// もし右端を超えていたら
+		MousePos.x = 1;
+		isTransisiton = true;
+	}
+
+	if (MousePos.y <= 0)
+	{// もし上端を超えていたら
+		MousePos.y = rect.bottom - 2;
+		isTransisiton = true;
+	}
+
+	if (MousePos.y > rect.bottom - 2)
+	{// もし下端を超えていたら
+		MousePos.y = 1;
+		isTransisiton = true;
+	}
+
+	if (isTransisiton == true)
+	{// もし移動していたら
+		SetCursorPos(MousePos.x, MousePos.y);	// 移動後の位置にマウスカーソルを移動
+
+		ScreenToClient(hWnd, &MousePos);		// クライアント領域の座標に変換
+
+		// 変換した座標をマウス情報に設定
+		g_MouseState.CurrentMousePos = MousePos;
+		g_MouseState.PrevMousePos = MousePos;
+	}
+}
+
+//================================================================================================================
+// マウスの位置の移動量を取得
+//================================================================================================================
+POINT Shi::GetMouseMove(void)
+{
+	return g_MouseState.MouseMove;
+}
+
+//================================================================================================================
+// マウスボタンクリックのフラグを取得する
+//================================================================================================================
+bool Shi::GetMouseButtonFlags(MOUSEKEY key)
+{
+	return g_MouseState.ButtonFlags & BITMASK(key) ? true : false;
+}
+
+//================================================================================================================
+// マウスボタンクリックのフラグを立てる
+//================================================================================================================
+void Shi::AddMouseButtonFlags(UINT flags)
+{
+	g_MouseState.ButtonFlags |= flags;
+}
+
+//================================================================================================================
+// マウスボタンクリックのフラグを折る
+//================================================================================================================
+void Shi::SubMouseButtonFlags(UINT flags)
+{
+	g_MouseState.ButtonFlags &= ~flags;
 }

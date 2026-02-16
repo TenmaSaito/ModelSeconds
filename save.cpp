@@ -37,6 +37,8 @@ void SaveModelFile(const char* pSaveFileName)
 		return;
 	}
 
+	bool isIntSave = false;
+
 	D3DXVECTOR3 rot = VECNULL;										// 向き変換用
 
 	_3DMODEL* p3DModel = Get3DModel(0);								// 設置モデルの先頭アドレス
@@ -57,6 +59,13 @@ void SaveModelFile(const char* pSaveFileName)
 	{// ファイルが開けなかったら
 		MessageBox(NULL, TEXT("テキストデータの保存に失敗"), TEXT("Error"), MB_ICONHAND);
 		return;
+	}
+
+	int nID = GenerateMessageBox((MB_YESNO | MB_ICONINFORMATION), "Info", "Int型で保存しますか？");	// 確認
+
+	if (nID == IDYES)
+	{// はいが選択されたら
+		isIntSave = true;		// フラグを変える
 	}
 
 	// ヘッダー
@@ -130,18 +139,37 @@ void SaveModelFile(const char* pSaveFileName)
 	fprintf(pFile, "\n");		// 改行
 
 	// 配置床数分だけ
-	for (int nCntField = 0; nCntField < nNumFIeld; nCntField++, pField++)
+	if (isIntSave == true)
 	{
-		rot = RadianToDegree(pField->rot);
+		for (int nCntField = 0; nCntField < nNumFIeld; nCntField++, pField++)
+		{
+			rot = RadianToDegree(pField->rot);
 
-		fprintf(pFile, "FIELDSET\n");
-		fprintf(pFile, "\tTEXTYPE = %d\t\t# テクスチャの種類\n", pField->nIndexTexture);
-		fprintf(pFile, "\tPOS = %.1f %.1f %.1f\t# 位置\n", pField->pos.x, pField->pos.y, pField->pos.z);
-		fprintf(pFile, "\tROT = %d %d %d\t\t\t# 向き\n", (int)rot.x, (int)rot.y, (int)rot.z);
-		fprintf(pFile, "\tBLOCK = %d %d\t# 分割数(X / Z)\n", pField->nXBlock, pField->nZBlock);
-		fprintf(pFile, "\tSIZE = %.0f %.0f\t# 大きさ(X / Z)\n", pField->fWidth / pField->nXBlock, pField->fDepth / pField->nZBlock);
-		fprintf(pFile, "END_FIELDSET\n");
-		fprintf(pFile, "\n");
+			fprintf(pFile, "FIELDSET\n");
+			fprintf(pFile, "\tTEXTYPE = %d\t\t# テクスチャの種類\n", pField->nIndexTexture);
+			fprintf(pFile, "\tPOS = %d %d %d\t# 位置\n", (int)pField->pos.x, (int)pField->pos.y, (int)pField->pos.z);
+			fprintf(pFile, "\tROT = %d %d %d\t\t\t# 向き\n", (int)rot.x, (int)rot.y, (int)rot.z);
+			fprintf(pFile, "\tBLOCK = %d %d\t# 分割数(X / Z)\n", pField->nXBlock, pField->nZBlock);
+			fprintf(pFile, "\tSIZE = %d %d\t# 大きさ(X / Z)\n", (int)pField->fWidth / pField->nXBlock, (int)pField->fDepth / pField->nZBlock);
+			fprintf(pFile, "END_FIELDSET\n");
+			fprintf(pFile, "\n");
+		}
+	}
+	else
+	{
+		for (int nCntField = 0; nCntField < nNumFIeld; nCntField++, pField++)
+		{
+			rot = RadianToDegree(pField->rot);
+
+			fprintf(pFile, "FIELDSET\n");
+			fprintf(pFile, "\tTEXTYPE = %d\t\t# テクスチャの種類\n", pField->nIndexTexture);
+			fprintf(pFile, "\tPOS = %.1f %.1f %.1f\t# 位置\n", pField->pos.x, pField->pos.y, pField->pos.z);
+			fprintf(pFile, "\tROT = %d %d %d\t\t\t# 向き\n", (int)rot.x, (int)rot.y, (int)rot.z);
+			fprintf(pFile, "\tBLOCK = %d %d\t# 分割数(X / Z)\n", pField->nXBlock, pField->nZBlock);
+			fprintf(pFile, "\tSIZE = %.0f %.0f\t# 大きさ(X / Z)\n", pField->fWidth / pField->nXBlock, pField->fDepth / pField->nZBlock);
+			fprintf(pFile, "END_FIELDSET\n");
+			fprintf(pFile, "\n");
+		}
 	}
 
 	fprintf(pFile, "\n");		// 改行
@@ -154,16 +182,33 @@ void SaveModelFile(const char* pSaveFileName)
 	fprintf(pFile, "\n");		// 改行
 
 	// 配置モデル数分だけ
-	for (int nCntModel = 0; nCntModel < *nNumModel; nCntModel++, p3DModel++)
+	if (isIntSave == true)
 	{
-		rot = RadianToDegree(p3DModel->rot);
+		for (int nCntModel = 0; nCntModel < *nNumModel; nCntModel++, p3DModel++)
+		{
+			rot = RadianToDegree(p3DModel->rot);
 
-		fprintf(pFile, "MODELSET\n");
-		fprintf(pFile, "\tTYPE = %d\n", p3DModel->nIdx3Dmodel);
-		fprintf(pFile, "\tPOS = %.1f %.1f %.1f\n", p3DModel->pos.x, p3DModel->pos.y, p3DModel->pos.z);
-		fprintf(pFile, "\tROT = %d %d %d\n", (int)rot.x, (int)rot.y, (int)rot.z);
-		fprintf(pFile, "END_MODELSET\n");
-		fprintf(pFile, "\n");
+			fprintf(pFile, "MODELSET\n");
+			fprintf(pFile, "\tTYPE = %d\n", p3DModel->nIdx3Dmodel);
+			fprintf(pFile, "\tPOS = %d %d %d\n", (int)p3DModel->pos.x, (int)p3DModel->pos.y, (int)p3DModel->pos.z);
+			fprintf(pFile, "\tROT = %d %d %d\n", (int)rot.x, (int)rot.y, (int)rot.z);
+			fprintf(pFile, "END_MODELSET\n");
+			fprintf(pFile, "\n");
+		}
+	}
+	else
+	{
+		for (int nCntModel = 0; nCntModel < *nNumModel; nCntModel++, p3DModel++)
+		{
+			rot = RadianToDegree(p3DModel->rot);
+
+			fprintf(pFile, "MODELSET\n");
+			fprintf(pFile, "\tTYPE = %d\n", p3DModel->nIdx3Dmodel);
+			fprintf(pFile, "\tPOS = %.1f %.1f %.1f\n", p3DModel->pos.x, p3DModel->pos.y, p3DModel->pos.z);
+			fprintf(pFile, "\tROT = %d %d %d\n", (int)rot.x, (int)rot.y, (int)rot.z);
+			fprintf(pFile, "END_MODELSET\n");
+			fprintf(pFile, "\n");
+		}
 	}
 
 	fprintf(pFile, "\n");											// 改行

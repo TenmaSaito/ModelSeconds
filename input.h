@@ -25,6 +25,8 @@
 #define JOYTRIGGER_LEFT		(0)			// 左押し込みトリガー
 #define JOYTRIGGER_RIGHT	(1)			// 右押し込みトリガー
 
+#define BITMASK(flag)		(1U << (flag))	// ビットマスク
+
 //**********************************************************************************
 //*** ジョイパッドのキーの種類 ***
 //**********************************************************************************
@@ -152,5 +154,38 @@ bool GetMouseTrigger(int nButton);
 bool GetMouseRelease(int nButton);
 POINT GetMousePos(void);
 LONG GetMouseMove(MOUSESLOPE slope);
+
+
+//********************************************************************************
+// 追加したマウスの情報
+//********************************************************************************
+
+namespace Shi
+{
+	//*****************************************************************************
+	// マウス情報構造体定義
+	//*****************************************************************************
+	typedef struct MouseState
+	{
+		POINT CurrentMousePos;		// 今のマウスカーソルの位置
+		POINT PrevMousePos;			// 過去のマウスカーソルの位置
+		POINT MouseMove;			// マウスカーソルの移動量
+		UINT  ButtonFlags;			// なんのボタンが押されているか
+		UINT  PrevButtonFlags;		// 過去のフラグ
+		int	  nInWheel;				// ホイールの回転量(保存)
+		int   nOutWheel;			// ホイールの回転量(出力)
+	}MouseState;
+
+	//**********************************************************************************
+	//*** プロトタイプ宣言 ***
+	//**********************************************************************************
+	void UpdateMouseState(void);
+	void UpdateCuurentMousePos(LPARAM lParam);
+	void TransisionMousePos(HWND hWnd);
+	POINT GetMouseMove(void);
+	bool GetMouseButtonFlags(MOUSEKEY key);
+	void AddMouseButtonFlags(UINT flags);
+	void SubMouseButtonFlags(UINT flags);
+}
 
 #endif
